@@ -47,7 +47,7 @@ export default function OtpInput({ otp, setOtp, error }) {
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
         Enter 6-digit OTP
       </label>
       <div className="flex gap-2 justify-center">
@@ -63,17 +63,17 @@ export default function OtpInput({ otp, setOtp, error }) {
             onKeyDown={(e) => handleKeyDown(i, e)}
             onPaste={i === 0 ? handlePaste : undefined}
             className={`
-              w-12 h-14 text-center text-xl font-bold rounded-lg border-2
+              w-12 h-14 text-center text-xl font-bold rounded-lg border-2 text-gray-900 dark:text-gray-100
               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-              transition-all
-              ${error ? "border-red-400 bg-red-50" : "border-gray-300 bg-white"}
-              ${val ? "border-blue-400 bg-blue-50" : ""}
+              transition-all bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm
+              ${error ? "border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/30" : "border-gray-300 dark:border-gray-600"}
+              ${val ? "border-blue-400 dark:border-blue-500 bg-blue-50/50 dark:bg-blue-900/30" : ""}
             `}
           />
         ))}
       </div>
       {error && (
-        <p className="mt-2 text-sm text-red-600 text-center">{error}</p>
+        <p className="mt-2 text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
       )}
     </div>
   );

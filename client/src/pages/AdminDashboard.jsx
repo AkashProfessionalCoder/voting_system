@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Loader from "../components/Loader";
+import AnimatedBackgroundLayout from "../components/AnimatedBackgroundLayout";
 import {
   adminLogin,
   getResults,
@@ -176,37 +177,38 @@ export default function AdminDashboard() {
   // Login screen
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm">
+      <AnimatedBackgroundLayout>
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-xl p-8 w-full max-w-sm border border-white/40 dark:border-gray-700/50">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
               <span className="text-white font-bold">A</span>
             </div>
-            <h1 className="text-xl font-bold text-gray-900">Admin Login</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Admin Login</h1>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Username
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm"
                 required
               />
             </div>
@@ -221,8 +223,9 @@ export default function AdminDashboard() {
               {loginLoading ? "Logging in..." : "Login"}
             </button>
           </form>
+          </div>
         </div>
-      </div>
+      </AnimatedBackgroundLayout>
     );
   }
 
@@ -232,20 +235,20 @@ export default function AdminDashboard() {
     : 1;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <AnimatedBackgroundLayout>
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+      <header className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border-b border-white/40 dark:border-gray-700/50 shadow-sm sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">FC</span>
             </div>
-            <h1 className="text-lg font-bold text-gray-900">Admin Dashboard</h1>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Admin Dashboard</h1>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500 hidden sm:block">
+            <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
               Total Votes:{" "}
-              <strong className="text-gray-900">{totalVotes}</strong>
+              <strong className="text-gray-900 dark:text-gray-100">{totalVotes}</strong>
             </span>
             <button
               onClick={handleLogout}
@@ -257,9 +260,9 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-6">
+      <main className="max-w-6xl mx-auto px-4 py-6 flex-1 w-full">
         {/* Tabs */}
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 max-w-lg">
+        <div className="flex gap-1 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-white/50 dark:border-gray-700/50 rounded-xl p-1 mb-6 max-w-lg shadow-sm">
           {[
             { key: "results", label: "Results" },
             { key: "voters", label: "Voters" },
@@ -274,8 +277,8 @@ export default function AdminDashboard() {
               }}
               className={`flex-1 py-2 px-3 text-sm font-medium rounded-lg transition-colors ${
                 activeTab === tab.key
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-white/90 dark:bg-gray-700/90 text-gray-900 dark:text-white shadow-sm"
+                  : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
               }`}
             >
               {tab.label}
@@ -284,7 +287,7 @@ export default function AdminDashboard() {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          <div className="mb-4 p-3 bg-red-50/80 dark:bg-red-900/30 backdrop-blur-sm border border-red-200 dark:border-red-800/50 rounded-lg text-red-700 dark:text-red-400 text-sm">
             {error}
           </div>
         )}
@@ -297,7 +300,7 @@ export default function AdminDashboard() {
             {activeTab === "results" && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                     Vote Results
                   </h2>
                   <button
@@ -315,22 +318,22 @@ export default function AdminDashboard() {
                   results.map((r) => (
                     <div
                       key={r.nomineeId}
-                      className="bg-white rounded-xl border border-gray-200 p-4"
+                      className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-white/60 dark:border-gray-700/50 shadow-sm p-4"
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <h3 className="font-semibold text-gray-900">
+                          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
                             {r.name}
                           </h3>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
                             {r.title} &middot; {r.category}
                           </p>
                         </div>
-                        <span className="text-2xl font-bold text-blue-600">
+                        <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                           {r.voteCount}
                         </span>
                       </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2.5">
+                      <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5">
                         <div
                           className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
                           style={{
@@ -338,7 +341,7 @@ export default function AdminDashboard() {
                           }}
                         />
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                         {totalVotes > 0
                           ? ((r.voteCount / totalVotes) * 100).toFixed(1)
                           : 0}
@@ -353,7 +356,7 @@ export default function AdminDashboard() {
             {/* VOTERS TAB */}
             {activeTab === "voters" && (
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   All Voters ({voters.length})
                 </h2>
                 {voters.length === 0 ? (
@@ -361,10 +364,10 @@ export default function AdminDashboard() {
                     No voters yet.
                   </p>
                 ) : (
-                  <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-white/60 dark:border-gray-700/50 overflow-hidden shadow-sm">
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
-                        <thead className="bg-gray-50 border-b border-gray-200">
+                        <thead className="bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm border-b border-white/40 dark:border-gray-600/50">
                           <tr>
                             <th className="px-4 py-3 text-left font-medium text-gray-500">
                               #
@@ -380,19 +383,19 @@ export default function AdminDashboard() {
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                           {voters.map((v, i) => (
-                            <tr key={v._id} className="hover:bg-gray-50">
-                              <td className="px-4 py-3 text-gray-400">
+                            <tr key={v._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                              <td className="px-4 py-3 text-gray-400 dark:text-gray-500">
                                 {i + 1}
                               </td>
-                              <td className="px-4 py-3 text-gray-900 font-mono text-xs">
+                              <td className="px-4 py-3 text-gray-900 dark:text-gray-300 font-mono text-xs">
                                 {v.email}
                               </td>
-                              <td className="px-4 py-3 text-gray-700">
+                              <td className="px-4 py-3 text-gray-700 dark:text-gray-400">
                                 {v.nomineeId?.name || "Deleted"}
                               </td>
-                              <td className="px-4 py-3 text-gray-400 text-xs">
+                              <td className="px-4 py-3 text-gray-400 dark:text-gray-500 text-xs">
                                 {new Date(v.votedAt).toLocaleString()}
                               </td>
                             </tr>
@@ -408,16 +411,16 @@ export default function AdminDashboard() {
             {/* NOMINEES TAB */}
             {activeTab === "nominees" && (
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Manage Nominees
                 </h2>
 
                 {/* Add form */}
                 <form
                   onSubmit={handleAddNominee}
-                  className="bg-white rounded-xl border border-gray-200 p-4 mb-6"
+                  className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-white/60 dark:border-gray-700/50 shadow-sm p-4 mb-6"
                 >
-                  <h3 className="font-medium text-gray-900 mb-3">
+                  <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
                     Add New Nominee
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -428,7 +431,7 @@ export default function AdminDashboard() {
                       onChange={(e) =>
                         setNewNominee({ ...newNominee, name: e.target.value })
                       }
-                      className="px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                     <input
@@ -438,7 +441,7 @@ export default function AdminDashboard() {
                       onChange={(e) =>
                         setNewNominee({ ...newNominee, title: e.target.value })
                       }
-                      className="px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                     <input
@@ -451,7 +454,7 @@ export default function AdminDashboard() {
                           category: e.target.value,
                         })
                       }
-                      className="px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                     <input
@@ -461,7 +464,7 @@ export default function AdminDashboard() {
                       onChange={(e) =>
                         setNewNominee({ ...newNominee, image: e.target.value })
                       }
-                      className="px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                   <button
@@ -478,17 +481,17 @@ export default function AdminDashboard() {
                   {nominees.map((n) => (
                     <div
                       key={n._id}
-                      className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between"
+                      className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-white/60 dark:border-gray-700/50 shadow-sm p-4 flex items-center justify-between"
                     >
                       <div>
-                        <h4 className="font-medium text-gray-900">{n.name}</h4>
-                        <p className="text-sm text-gray-500">
+                        <h4 className="font-medium text-gray-900 dark:text-gray-100">{n.name}</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                           {n.title} &middot; {n.category}
                         </p>
                       </div>
                       <button
                         onClick={() => handleDeleteNominee(n._id, n.name)}
-                        className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                        className="px-3 py-1.5 text-sm text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/50 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
                       >
                         Delete
                       </button>
@@ -501,18 +504,18 @@ export default function AdminDashboard() {
             {/* SETTINGS TAB */}
             {activeTab === "settings" && (
               <div className="max-w-lg">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Settings
                 </h2>
 
-                <div className="bg-white rounded-xl border border-gray-200 p-4">
-                  <h3 className="font-medium text-gray-900 mb-1">
+                <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-white/60 dark:border-gray-700/50 shadow-sm p-4">
+                  <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-1">
                     Voting Deadline
                   </h3>
                   {currentDeadline && (
-                    <p className="text-sm text-gray-500 mb-3">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
                       Current deadline:{" "}
-                      <span className="font-medium text-gray-700">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
                         {new Date(currentDeadline).toLocaleString()}
                       </span>
                     </p>
@@ -522,7 +525,7 @@ export default function AdminDashboard() {
                       type="datetime-local"
                       value={deadlineInput}
                       onChange={(e) => setDeadlineInput(e.target.value)}
-                      className="flex-1 px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                     <button
                       onClick={handleSetDeadline}
@@ -532,17 +535,17 @@ export default function AdminDashboard() {
                     </button>
                   </div>
                   {deadlineMsg && (
-                    <p className="mt-2 text-sm text-green-600">{deadlineMsg}</p>
+                    <p className="mt-2 text-sm text-green-600 dark:text-green-400">{deadlineMsg}</p>
                   )}
                 </div>
 
-                <div className="bg-white rounded-xl border border-gray-200 p-4 mt-4">
-                  <h3 className="font-medium text-gray-900 mb-2">
+                <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-white/60 dark:border-gray-700/50 shadow-sm p-4 mt-4">
+                  <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
                     Quick Actions
                   </h3>
                   <button
                     onClick={fetchDashboardData}
-                    className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
                     Refresh Data
                   </button>
@@ -552,6 +555,6 @@ export default function AdminDashboard() {
           </>
         )}
       </main>
-    </div>
+    </AnimatedBackgroundLayout>
   );
 }

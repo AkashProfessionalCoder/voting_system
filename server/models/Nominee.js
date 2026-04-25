@@ -20,6 +20,18 @@ const nomineeSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  linkedin: {
+    type: String,
+    default: "",
+  },
+  twitter: {
+    type: String,
+    default: "",
+  },
+  github: {
+    type: String,
+    default: "",
+  },
   createdAt: {
     type: Date,
     default: Date.now,

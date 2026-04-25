@@ -77,7 +77,7 @@ const updateNominee = async (req, res) => {
         ...(image !== undefined && { image }),
         ...(category && { category: category.trim() }),
       },
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true },
     );
 
     if (!nominee) {
