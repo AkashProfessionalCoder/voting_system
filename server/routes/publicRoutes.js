@@ -9,14 +9,14 @@ const {
 } = require("../controllers/voteController");
 const { getNominees } = require("../controllers/nomineeController");
 const { verifyVoterToken } = require("../middlewares/authMiddleware");
-const { otpLimiter } = require("../middlewares/rateLimiter");
+const { otpLimiter, otpVerifyLimiter } = require("../middlewares/rateLimiter");
 
 // Nominees
 router.get("/nominees", getNominees);
 
 // OTP
 router.post("/otp/request", otpLimiter, requestOtp);
-router.post("/otp/verify", verifyOtp);
+router.post("/otp/verify", otpVerifyLimiter, verifyOtp);
 
 // Voting
 router.post("/vote", verifyVoterToken, castVote);
