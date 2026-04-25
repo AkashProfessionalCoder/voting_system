@@ -1,5 +1,8 @@
+import { useState } from "react";
+
 export default function NomineeCard({ nominee, selected, onSelect }) {
   const isSelected = selected === nominee._id;
+  const [imageError, setImageError] = useState(false);
 
   return (
     <button
@@ -33,11 +36,12 @@ export default function NomineeCard({ nominee, selected, onSelect }) {
       )}
 
       <div className="flex items-center gap-4">
-        {nominee.image ? (
+        {nominee.image && !imageError ? (
           <img
             src={nominee.image}
             alt={nominee.name}
-            className={`w-14 h-14 rounded-full object-cover shrink-0 border-2 ${isSelected ? "border-blue-500" : "border-gray-200"}`}
+            onError={() => setImageError(true)}
+            className={`w-14 h-14 rounded-full object-cover shrink-0 border-2 ${isSelected ? "border-blue-500" : "border-gray-200 dark:border-gray-700"}`}
           />
         ) : (
           <div
