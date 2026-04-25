@@ -28,6 +28,15 @@ const addNominee = async (req, res) => {
         .json({ error: "Name, title, and category are required." });
     }
 
+    if (
+      typeof name !== "string" ||
+      typeof title !== "string" ||
+      typeof category !== "string" ||
+      (image && typeof image !== "string")
+    ) {
+      return res.status(400).json({ error: "Invalid input format." });
+    }
+
     const nominee = await Nominee.create({
       name: name.trim(),
       title: title.trim(),
@@ -50,6 +59,15 @@ const updateNominee = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, title, image, category } = req.body;
+
+    if (
+      (name && typeof name !== "string") ||
+      (title && typeof title !== "string") ||
+      (image !== undefined && typeof image !== "string") ||
+      (category && typeof category !== "string")
+    ) {
+      return res.status(400).json({ error: "Invalid input format." });
+    }
 
     const nominee = await Nominee.findByIdAndUpdate(
       id,

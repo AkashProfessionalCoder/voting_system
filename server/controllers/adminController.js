@@ -17,6 +17,10 @@ const login = async (req, res) => {
         .json({ error: "Username and password are required." });
     }
 
+    if (typeof username !== "string" || typeof password !== "string") {
+      return res.status(400).json({ error: "Invalid input format." });
+    }
+
     const admin = await Admin.findOne({
       username: username.trim().toLowerCase(),
     });
