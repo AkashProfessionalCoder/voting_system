@@ -16,6 +16,7 @@
 ## File Headers
 
 Every controller, service, and middleware file should have a brief JSDoc-style comment on each exported function describing:
+
 - What endpoint it handles (for controllers)
 - What it does (one line)
 
@@ -65,32 +66,32 @@ const login = async (req, res) => { ... };
 
 ### Files
 
-| Type         | Convention           | Example               |
-|-------------|----------------------|----------------------|
-| Models       | PascalCase, singular | `Vote.js`, `Admin.js` |
-| Controllers  | camelCase + suffix   | `otpController.js`    |
-| Routes       | camelCase + suffix   | `publicRoutes.js`     |
-| Services     | camelCase + suffix   | `emailService.js`     |
-| Middlewares  | camelCase            | `authMiddleware.js`   |
-| Components   | PascalCase           | `NomineeCard.jsx`     |
-| Pages        | PascalCase           | `VotingPage.jsx`      |
+| Type        | Convention           | Example               |
+| ----------- | -------------------- | --------------------- |
+| Models      | PascalCase, singular | `Vote.js`, `Admin.js` |
+| Controllers | camelCase + suffix   | `otpController.js`    |
+| Routes      | camelCase + suffix   | `publicRoutes.js`     |
+| Services    | camelCase + suffix   | `emailService.js`     |
+| Middlewares | camelCase            | `authMiddleware.js`   |
+| Components  | PascalCase           | `NomineeCard.jsx`     |
+| Pages       | PascalCase           | `VotingPage.jsx`      |
 
 ### Variables & Functions
 
-| Type         | Convention           | Example               |
-|-------------|----------------------|----------------------|
-| Variables    | camelCase            | `normalizedEmail`     |
-| Constants    | UPPER_SNAKE          | `GMAIL_REGEX`, `STEPS`|
-| Functions    | camelCase, verb-first| `handleLogin`, `castVote` |
-| Booleans     | is/has/can prefix    | `isLoggedIn`, `hasVoted` |
-| React state  | `[noun, setNoun]`    | `[email, setEmail]`   |
+| Type        | Convention            | Example                   |
+| ----------- | --------------------- | ------------------------- |
+| Variables   | camelCase             | `normalizedEmail`         |
+| Constants   | UPPER_SNAKE           | `GMAIL_REGEX`, `STEPS`    |
+| Functions   | camelCase, verb-first | `handleLogin`, `castVote` |
+| Booleans    | is/has/can prefix     | `isLoggedIn`, `hasVoted`  |
+| React state | `[noun, setNoun]`     | `[email, setEmail]`       |
 
 ### API Routes
 
-| Convention     | Example                      |
-|----------------|------------------------------|
-| Plural nouns   | `/api/nominees`, `/api/voters`|
-| Nested resources | `/api/admin/nominees/:id`  |
+| Convention       | Example                               |
+| ---------------- | ------------------------------------- |
+| Plural nouns     | `/api/nominees`, `/api/voters`        |
+| Nested resources | `/api/admin/nominees/:id`             |
 | Actions as verbs | `/api/otp/request`, `/api/otp/verify` |
 
 ---
@@ -122,6 +123,7 @@ const someAction = async (req, res) => {
 ```
 
 Rules:
+
 - Always return `{ error: "..." }` for errors (consistent shape)
 - Always return `{ message: "..." }` for success
 - Use specific HTTP status codes (400, 401, 403, 404, 409, 429, 500)

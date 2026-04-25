@@ -18,13 +18,13 @@ main ─────────────────────────
 
 ### Branch Roles
 
-| Branch   | Purpose                          | Deploys To   | Protected |
-|----------|----------------------------------|------------- |-----------|
-| `main`   | Stable, release-ready code       | Production   | Yes       |
-| `dev`    | Active development, integration  | Staging      | Yes       |
-| `feature/*` | New features                  | —            | No        |
-| `fix/*`  | Bug fixes                        | —            | No        |
-| `docs/*` | Documentation changes            | —            | No        |
+| Branch      | Purpose                         | Deploys To | Protected |
+| ----------- | ------------------------------- | ---------- | --------- |
+| `main`      | Stable, release-ready code      | Production | Yes       |
+| `dev`       | Active development, integration | Staging    | Yes       |
+| `feature/*` | New features                    | —          | No        |
+| `fix/*`     | Bug fixes                       | —          | No        |
+| `docs/*`    | Documentation changes           | —          | No        |
 
 ---
 
@@ -71,21 +71,23 @@ git push origin feature/your-feature-name
 ## Commit Message Convention
 
 Format:
+
 ```
 <type>: <short description>
 ```
 
-| Type     | Usage                              |
-|----------|------------------------------------|
-| `feat`   | New feature                        |
-| `fix`    | Bug fix                            |
-| `docs`   | Documentation only                 |
-| `style`  | Formatting (no logic change)       |
-| `refactor` | Code restructuring               |
-| `test`   | Adding or updating tests           |
-| `chore`  | Build, config, dependencies        |
+| Type       | Usage                        |
+| ---------- | ---------------------------- |
+| `feat`     | New feature                  |
+| `fix`      | Bug fix                      |
+| `docs`     | Documentation only           |
+| `style`    | Formatting (no logic change) |
+| `refactor` | Code restructuring           |
+| `test`     | Adding or updating tests     |
+| `chore`    | Build, config, dependencies  |
 
 Examples:
+
 ```
 feat: add Google OAuth login option
 fix: handle expired OTP edge case on verify
@@ -98,23 +100,30 @@ chore: update express to v5.2.1
 ## PR Guidelines
 
 ### Title
+
 Use the same format as commit messages:
+
 ```
 feat: add CSV export for admin dashboard
 ```
 
 ### Description Template
+
 ```markdown
 ## What
+
 Brief description of the change.
 
 ## Why
+
 Context and motivation.
 
 ## How
+
 Implementation approach (if non-obvious).
 
 ## Testing
+
 - [ ] Tested locally
 - [ ] Voting flow works end-to-end
 - [ ] Admin dashboard functional
