@@ -18,7 +18,7 @@ A secure, OTP-based voting platform for the Flutter Chennai community's annual a
 ## Tech Stack
 
 | Layer    | Technology                  |
-|----------|-----------------------------|
+| -------- | --------------------------- |
 | Backend  | Node.js, Express 5          |
 | Frontend | React 19, Vite, Tailwind v4 |
 | Database | MongoDB, Mongoose           |
@@ -81,15 +81,15 @@ cp .env.example .env
 
 Edit `.env` with your values:
 
-| Variable           | Description                          |
-|--------------------|--------------------------------------|
-| `PORT`             | Server port (default: `5050`)        |
-| `MONGODB_URI`      | MongoDB connection string            |
-| `JWT_SECRET`       | Secret key for JWT signing           |
-| `EMAIL_USER`       | Gmail address (sender)               |
-| `EMAIL_PASS`       | Gmail App Password (not regular pwd) |
-| `CLIENT_URL`       | Frontend URL for CORS                |
-| `VOTING_DEADLINE`  | ISO 8601 timestamp                   |
+| Variable          | Description                          |
+| ----------------- | ------------------------------------ |
+| `PORT`            | Server port (default: `5050`)        |
+| `MONGODB_URI`     | MongoDB connection string            |
+| `JWT_SECRET`      | Secret key for JWT signing           |
+| `EMAIL_USER`      | Gmail address (sender)               |
+| `EMAIL_PASS`      | Gmail App Password (not regular pwd) |
+| `CLIENT_URL`      | Frontend URL for CORS                |
+| `VOTING_DEADLINE` | ISO 8601 timestamp                   |
 
 ### 3. Seed Database
 
@@ -128,27 +128,27 @@ Serves both API and React from a single Express instance.
 
 ### Public
 
-| Method | Endpoint            | Description             |
-|--------|---------------------|-------------------------|
-| GET    | `/api/nominees`     | List all nominees       |
-| POST   | `/api/otp/request`  | Request OTP             |
-| POST   | `/api/otp/verify`   | Verify OTP → get token  |
-| POST   | `/api/vote`         | Cast vote (JWT required)|
-| GET    | `/api/vote/status`  | Check if email voted    |
-| GET    | `/api/deadline`     | Get voting deadline     |
+| Method | Endpoint           | Description              |
+| ------ | ------------------ | ------------------------ |
+| GET    | `/api/nominees`    | List all nominees        |
+| POST   | `/api/otp/request` | Request OTP              |
+| POST   | `/api/otp/verify`  | Verify OTP → get token   |
+| POST   | `/api/vote`        | Cast vote (JWT required) |
+| GET    | `/api/vote/status` | Check if email voted     |
+| GET    | `/api/deadline`    | Get voting deadline      |
 
 ### Admin (JWT required)
 
-| Method | Endpoint                  | Description          |
-|--------|---------------------------|----------------------|
-| POST   | `/api/admin/login`        | Admin login          |
-| GET    | `/api/admin/results`      | Vote counts          |
-| GET    | `/api/admin/voters`       | Voter list           |
-| GET    | `/api/admin/export`       | CSV export           |
-| POST   | `/api/admin/nominees`     | Add nominee          |
-| PUT    | `/api/admin/nominees/:id` | Update nominee       |
-| DELETE | `/api/admin/nominees/:id` | Delete nominee       |
-| PUT    | `/api/admin/deadline`     | Set voting deadline  |
+| Method | Endpoint                  | Description         |
+| ------ | ------------------------- | ------------------- |
+| POST   | `/api/admin/login`        | Admin login         |
+| GET    | `/api/admin/results`      | Vote counts         |
+| GET    | `/api/admin/voters`       | Voter list          |
+| GET    | `/api/admin/export`       | CSV export          |
+| POST   | `/api/admin/nominees`     | Add nominee         |
+| PUT    | `/api/admin/nominees/:id` | Update nominee      |
+| DELETE | `/api/admin/nominees/:id` | Delete nominee      |
+| PUT    | `/api/admin/deadline`     | Set voting deadline |
 
 ---
 
@@ -166,11 +166,11 @@ Serves both API and React from a single Express instance.
 
 ## Documentation
 
-| Document | Purpose |
-|----------|---------|
-| [Architecture](docs/Architecture.md) | System design, layers, data flow |
-| [Contribution Guide](docs/Contribution.md) | Branching strategy, PR workflow |
-| [Documentation Standards](docs/Documentation_pattern.md) | Code commenting rules |
+| Document                                                 | Purpose                          |
+| -------------------------------------------------------- | -------------------------------- |
+| [Architecture](docs/Architecture.md)                     | System design, layers, data flow |
+| [Contribution Guide](docs/Contribution.md)               | Branching strategy, PR workflow  |
+| [Documentation Standards](docs/Documentation_pattern.md) | Code commenting rules            |
 
 ---
 
