@@ -23,52 +23,73 @@ const seed = async () => {
     console.log("Admin user already exists");
   }
 
-  // Seed nominees
-  const nomineeCount = await Nominee.countDocuments();
-  if (nomineeCount === 0) {
+  // Seed nominees — clear existing and re-seed
+  await Nominee.deleteMany({});
+  console.log("Cleared existing nominees");
+  {
     const nominees = [
       {
-        name: "Ravi Kumar",
-        title: "Flutter GDE & Community Lead",
+        name: "Shiva Prasath R",
+        title: "Community Member",
+        image: "",
+        category: "Community Leader",
+        linkedin: "https://www.linkedin.com/in/shivaprasathr396",
+      },
+      {
+        name: "Harish Anbalagan",
+        title: "Community Member",
+        image: "",
+        category: "Community Leader",
+        linkedin: "https://www.linkedin.com/in/harishanbalagan/",
+        twitter: "https://x.com/theflutterboi",
+        github: "https://github.com/Harishwarrior",
+      },
+      {
+        name: "Akash Senthil",
+        title: "Community Member",
+        image: "",
+        category: "Community Leader",
+        linkedin: "https://www.linkedin.com/in/akashprocoder",
+        twitter: "https://x.com/akashprocoder",
+        github: "https://github.com/AkashProfessionalCoder",
+      },
+      {
+        name: "Justin Benito",
+        title: "Community Member",
+        image:
+          "https://media.licdn.com/dms/image/v2/D5603AQHqxJcgC2lRgQ/profile-displayphoto-shrink_200_200/B56Zc7UgZxG0Ak-/0/1749046921446?e=1754524800&v=beta&t=GtKRFMjVkV0kQnR6gTDDZlkO0Qs-99_vf4mvUXdbKUk",
+        category: "Community Leader",
+        linkedin: "https://linkedin.com/in/justinbenito",
+        twitter: "https://x.com/JustinbenitoB",
+        github: "https://github.com/justinbenito",
+      },
+      {
+        name: "Harish Raj R",
+        title: "Community Member",
         image: "",
         category: "Community Leader",
       },
       {
-        name: "Priya Sharma",
-        title: "Open Source Contributor",
-        image: "",
+        name: "Vaishnavi G",
+        title: "Community Member",
+        image:
+          "https://media.licdn.com/dms/image/v2/D5603AQE166_DMPz2gQ/profile-displayphoto-scale_400_400/B56ZffMucGGQAg-/0/1751796346791?e=1778716800&v=beta&t=JbSfEcd8GCdLVoqBTYJ8cazfAlzfIxipwrBi1bJiaFI",
         category: "Community Leader",
+        linkedin: "https://www.linkedin.com/in/vaishnavi-g-900b8121a",
       },
       {
-        name: "Arun Prakash",
-        title: "Flutter Meetup Organizer",
-        image: "",
-        category: "Event Organizer",
-      },
-      {
-        name: "Deepa Menon",
-        title: "Workshop Conductor",
-        image: "",
-        category: "Event Organizer",
-      },
-      {
-        name: "Karthik Raj",
-        title: "Package Publisher (10+ packages)",
-        image: "",
-        category: "Open Source",
-      },
-      {
-        name: "Sneha Iyer",
-        title: "Flutter Documentation Lead",
-        image: "",
-        category: "Open Source",
+        name: "Kumaran Karunakaran",
+        title: "Community Member",
+        image:
+          "https://media.licdn.com/dms/image/v2/D5603AQGPKVa2szIV0A/profile-displayphoto-scale_400_400/B56ZyQgWOIG4Ak-/0/1771950926995?e=1778716800&v=beta&t=Co21_5lhPB0_Fsi5SaReuS4j2dQTLr5mh0BNSCuhs8w",
+        category: "Community Leader",
+        linkedin: "https://www.linkedin.com/in/kumarankarunakaran/",
+        github: "https://github.com/kumaran-flutter",
       },
     ];
 
     await Nominee.insertMany(nominees);
     console.log(`${nominees.length} nominees seeded`);
-  } else {
-    console.log(`${nomineeCount} nominees already exist`);
   }
 
   await mongoose.disconnect();

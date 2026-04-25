@@ -20,7 +20,7 @@ const getNominees = async (req, res) => {
  */
 const addNominee = async (req, res) => {
   try {
-    const { name, title, image, category } = req.body;
+    const { name, title, image, category, linkedin, twitter, github } = req.body;
 
     if (!name || !title || !category) {
       return res
@@ -28,11 +28,26 @@ const addNominee = async (req, res) => {
         .json({ error: "Name, title, and category are required." });
     }
 
+    if (
+      typeof name !== "string" ||
+      typeof title !== "string" ||
+      typeof category !== "string" ||
+      (image && typeof image !== "string") ||
+      (linkedin && typeof linkedin !== "string") ||
+      (twitter && typeof twitter !== "string") ||
+      (github && typeof github !== "string")
+    ) {
+      return res.status(400).json({ error: "Invalid input format." });
+    }
+
     const nominee = await Nominee.create({
       name: name.trim(),
       title: title.trim(),
       image: image || "",
       category: category.trim(),
+      linkedin: linkedin || "",
+      twitter: twitter || "",
+      github: github || "",
     });
 
     return res.status(201).json(nominee);
@@ -49,7 +64,19 @@ const addNominee = async (req, res) => {
 const updateNominee = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, title, image, category } = req.body;
+    const { name, title, image, category, linkedin, twitter, github } = req.body;
+
+    if (
+      (name && typeof name !== "string") ||
+      (title && typeof title !== "string") ||
+      (image !== undefined && typeof image !== "string") ||
+      (category && typeof category !== "string") ||
+      (linkedin !== undefined && typeof linkedin !== "string") ||
+      (twitter !== undefined && typeof twitter !== "string") ||
+      (github !== undefined && typeof github !== "string")
+    ) {
+      return res.status(400).json({ error: "Invalid input format." });
+    }
 
     const nominee = await Nominee.findByIdAndUpdate(
       id,
@@ -58,8 +85,11 @@ const updateNominee = async (req, res) => {
         ...(title && { title: title.trim() }),
         ...(image !== undefined && { image }),
         ...(category && { category: category.trim() }),
+        ...(linkedin !== undefined && { linkedin }),
+        ...(twitter !== undefined && { twitter }),
+        ...(github !== undefined && { github }),
       },
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true },
     );
 
     if (!nominee) {

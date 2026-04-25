@@ -4,6 +4,8 @@ import EmailInput from "../components/EmailInput";
 import OtpInput from "../components/OtpInput";
 import SuccessScreen from "../components/SuccessScreen";
 import Loader from "../components/Loader";
+import AnimatedBackgroundLayout from "../components/AnimatedBackgroundLayout";
+import ThemeToggle from "../components/ThemeToggle";
 import {
   getNominees,
   getDeadline,
@@ -172,61 +174,66 @@ export default function VotingPage() {
 
   if (isDeadlinePassed) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-red-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+      <AnimatedBackgroundLayout>
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 max-w-md text-center border border-white/20 dark:border-gray-700/50">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-8 h-8 text-red-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              Voting Has Ended
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400">
+              The voting deadline has passed. Thank you for your interest!
+            </p>
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
-            Voting Has Ended
-          </h2>
-          <p className="text-gray-500">
-            The voting deadline has passed. Thank you for your interest!
-          </p>
         </div>
-      </div>
+      </AnimatedBackgroundLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <AnimatedBackgroundLayout>
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+      <header className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border-b border-white/40 dark:border-gray-700/50 shadow-sm sticky top-0 z-20">
         <div className="max-w-4xl mx-auto px-4 py-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-lg">F</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                <span className="text-white font-bold text-lg">F</span>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  Flutter Chennai
+                </h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Annual Community Vote 2026
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">
-                Flutter Chennai
-              </h1>
-              <p className="text-sm text-gray-500">
-                Annual Community Vote 2026
-              </p>
-            </div>
+            <ThemeToggle />
           </div>
           {deadline && (
-            <p className="mt-2 text-xs text-gray-400">
+            <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
               Voting ends: {new Date(deadline).toLocaleString()}
             </p>
           )}
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      <main className="max-w-4xl mx-auto px-4 py-8 flex-1 w-full">
         {/* Step indicators */}
         <div className="flex items-center justify-center gap-2 mb-8">
           {["Select", "Email", "OTP", "Done"].map((label, i) => {
@@ -243,19 +250,19 @@ export default function VotingPage() {
                 <div
                   className={`
                   w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors
-                  ${isActive ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-500"}
+                  ${isActive ? "bg-blue-600 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"}
                 `}
                 >
                   {i + 1}
                 </div>
                 <span
-                  className={`text-sm hidden sm:block ${isActive ? "text-blue-600 font-medium" : "text-gray-400"}`}
+                  className={`text-sm hidden sm:block ${isActive ? "text-blue-600 dark:text-blue-400 font-medium" : "text-gray-400 dark:text-gray-500"}`}
                 >
                   {label}
                 </span>
                 {i < 3 && (
                   <div
-                    className={`w-8 h-0.5 ${isActive ? "bg-blue-600" : "bg-gray-200"}`}
+                    className={`w-8 h-0.5 ${isActive ? "bg-blue-600 dark:bg-blue-500" : "bg-gray-200 dark:bg-gray-700"}`}
                   />
                 )}
               </div>
@@ -279,16 +286,16 @@ export default function VotingPage() {
         {/* SELECT NOMINEE */}
         {step === STEPS.SELECT && (
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
               Choose Your Nominee
             </h2>
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
               Select the person you'd like to vote for.
             </p>
 
             {Object.entries(grouped).map(([category, noms]) => (
               <div key={category} className="mb-8">
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
                   {category}
                 </h3>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -319,11 +326,11 @@ export default function VotingPage() {
         {/* EMAIL INPUT */}
         {step === STEPS.EMAIL && (
           <div className="max-w-md mx-auto">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-1">
+            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/60 dark:border-gray-700/50 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
                 Enter Your Email
               </h2>
-              <p className="text-sm text-gray-500 mb-6">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                 We'll send a verification OTP to your Gmail.
               </p>
 
@@ -336,7 +343,7 @@ export default function VotingPage() {
               <div className="mt-6 flex gap-3">
                 <button
                   onClick={handleBack}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
+                  className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   Back
                 </button>
@@ -355,13 +362,13 @@ export default function VotingPage() {
         {/* OTP INPUT */}
         {step === STEPS.OTP && (
           <div className="max-w-md mx-auto">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-1">
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/60 dark:border-gray-700/50 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
                 Verify OTP
               </h2>
-              <p className="text-sm text-gray-500 mb-6">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                 Enter the 6-digit code sent to{" "}
-                <span className="font-medium text-gray-700">{email}</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">{email}</span>
               </p>
 
               <OtpInput otp={otp} setOtp={setOtp} error={fieldError} />
@@ -379,7 +386,7 @@ export default function VotingPage() {
               <div className="mt-6 flex gap-3">
                 <button
                   onClick={handleBack}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
+                  className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   Back
                 </button>
@@ -397,11 +404,11 @@ export default function VotingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 bg-white mt-12">
-        <div className="max-w-4xl mx-auto px-4 py-4 text-center text-xs text-gray-400">
+      <footer className="bg-white/60 dark:bg-gray-900/60 backdrop-blur-md border-t border-white/40 dark:border-gray-700/50 mt-auto">
+        <div className="max-w-4xl mx-auto px-4 py-4 text-center text-xs text-gray-500 dark:text-gray-400 font-medium">
           Flutter Chennai Community &middot; Secure OTP-based voting
         </div>
       </footer>
-    </div>
+    </AnimatedBackgroundLayout>
   );
 }

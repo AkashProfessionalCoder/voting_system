@@ -1,26 +1,28 @@
 const rateLimit = require("express-rate-limit");
+const { RATE_LIMITS } = require("../config/constants");
+
 
 /**
- * General API rate limiter
- */
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
-  message: { error: "Too many requests. Please try again later." },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-/**
- * OTP request rate limiter — max 3 requests per email per hour
- * This is a global limiter per IP; per-email enforcement is in the controller.
+ * OTP request rate limiter — max 5 requests per IP per hour
+ * This is a strict per-IP limiter; per-email limit is 3, enforced in controller.
  */
 const otpLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // per IP (generous); per-email limit is 3, enforced in controller
-  message: { error: "Too many OTP requests. Please try again later." },
+  windowMs: RATE_LIMITS.OTP_REQUEST.WINDOW_MS,
+  max: RATE_LIMITS.OTP_REQUEST.MAX_REQUESTS_PER_IP,
+  message: { error: "Too many OTP requests from this IP. Please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-module.exports = { apiLimiter, otpLimiter };
+/**
+ * OTP verify rate limiter — max 5 attempts per IP per 15 minutes
+ */
+const otpVerifyLimiter = rateLimit({
+  windowMs: RATE_LIMITS.OTP_VERIFY.WINDOW_MS,
+  max: RATE_LIMITS.OTP_VERIFY.MAX_REQUESTS_PER_IP,
+  message: { error: "Too many OTP verification attempts. Please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+module.exports = { otpLimiter, otpVerifyLimiter };
