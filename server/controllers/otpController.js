@@ -3,6 +3,7 @@ const OtpRequest = require("../models/OtpRequest");
 const User = require("../models/User");
 const { generateOtp, getOtpExpiry } = require("../services/otpService");
 const { sendOtpEmail } = require("../services/emailService");
+const { RATE_LIMITS } = require("../config/constants");
 
 const GMAIL_REGEX = /^[a-zA-Z0-9.]+@gmail\.com$/;
 
@@ -40,14 +41,14 @@ const requestOtp = async (req, res) => {
       return res.status(409).json({ error: "You have already voted." });
     }
 
-    // Rate limit: max 3 OTP requests per email per hour
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    // Rate limit: max requests per email per hour
+    const oneHourAgo = new Date(Date.now() - RATE_LIMITS.OTP_REQUEST.WINDOW_MS);
     const recentRequests = await OtpRequest.countDocuments({
       email: normalizedEmail,
       createdAt: { $gte: oneHourAgo },
     });
 
-    if (recentRequests >= 3) {
+    if (recentRequests >= RATE_LIMITS.OTP_REQUEST.MAX_REQUESTS_PER_EMAIL) {
       return res
         .status(429)
         .json({ error: "Too many OTP requests. Try again later." });
@@ -68,7 +69,7 @@ const requestOtp = async (req, res) => {
     await User.findOneAndUpdate(
       { email: normalizedEmail },
       { email: normalizedEmail },
-      { upsert: true, new: true },
+      { upsert: true, returnDocument: 'after' },
     );
 
     // Send OTP email
@@ -112,7 +113,7 @@ const verifyOtp = async (req, res) => {
         expiresAt: { $gt: new Date() },
       },
       { $set: { verified: true } },
-      { sort: { createdAt: -1 }, new: true },
+      { sort: { createdAt: -1 }, returnDocument: 'after' },
     );
 
     if (!otpRecord) {
