@@ -5,6 +5,7 @@ import {
   getResults,
   getVoters,
   getNominees,
+  getDeadline,
   addNominee,
   deleteNominee,
   exportVotes,
@@ -41,6 +42,7 @@ export default function AdminDashboard() {
 
   // Deadline
   const [deadlineInput, setDeadlineInput] = useState("");
+  const [currentDeadline, setCurrentDeadline] = useState(null);
   const [deadlineMsg, setDeadlineMsg] = useState("");
 
   useEffect(() => {
@@ -53,15 +55,25 @@ export default function AdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const [resRes, votersRes, nomRes] = await Promise.all([
+      const [resRes, votersRes, nomRes, dlRes] = await Promise.all([
         getResults(token),
         getVoters(token),
         getNominees(),
+        getDeadline(),
       ]);
       setResults(resRes.data.results);
       setTotalVotes(resRes.data.totalVotes);
       setVoters(votersRes.data);
       setNominees(nomRes.data);
+      if (dlRes.data.deadline) {
+        setCurrentDeadline(dlRes.data.deadline);
+        // Pre-fill input with current deadline in datetime-local format
+        const dl = new Date(dlRes.data.deadline);
+        const localISO = new Date(dl.getTime() - dl.getTimezoneOffset() * 60000)
+          .toISOString()
+          .slice(0, 16);
+        setDeadlineInput(localISO);
+      }
     } catch (err) {
       if (err.response?.status === 401) {
         handleLogout();
@@ -137,10 +149,25 @@ export default function AdminDashboard() {
 
   const handleSetDeadline = async () => {
     if (!deadlineInput) return;
+
+    // Confirmation dialog with old vs new date
+    const newDate = new Date(deadlineInput).toLocaleString();
+    const oldDate = currentDeadline
+      ? new Date(currentDeadline).toLocaleString()
+      : "Not set";
+
+    const confirmed = window.confirm(
+      `Are you sure you want to change the deadline?\n\nCurrent: ${oldDate}\nNew: ${newDate}`,
+    );
+    if (!confirmed) return;
+
     setDeadlineMsg("");
     try {
       const res = await setDeadlineApi(deadlineInput, token);
-      setDeadlineMsg(`Deadline set to: ${res.data.deadline}`);
+      setCurrentDeadline(res.data.deadline);
+      setDeadlineMsg(
+        `Deadline updated to: ${new Date(res.data.deadline).toLocaleString()}`,
+      );
     } catch (err) {
       setDeadlineMsg(err.response?.data?.error || "Failed to set deadline.");
     }
@@ -479,9 +506,17 @@ export default function AdminDashboard() {
                 </h2>
 
                 <div className="bg-white rounded-xl border border-gray-200 p-4">
-                  <h3 className="font-medium text-gray-900 mb-3">
+                  <h3 className="font-medium text-gray-900 mb-1">
                     Voting Deadline
                   </h3>
+                  {currentDeadline && (
+                    <p className="text-sm text-gray-500 mb-3">
+                      Current deadline:{" "}
+                      <span className="font-medium text-gray-700">
+                        {new Date(currentDeadline).toLocaleString()}
+                      </span>
+                    </p>
+                  )}
                   <div className="flex gap-3">
                     <input
                       type="datetime-local"
