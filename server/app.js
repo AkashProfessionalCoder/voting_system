@@ -5,7 +5,6 @@ const path = require("path");
 
 const publicRoutes = require("./routes/publicRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-const { apiLimiter } = require("./middlewares/rateLimiter");
 
 const app = express();
 
@@ -42,8 +41,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Global rate limiter
-app.use("/api", apiLimiter);
 
 // API routes
 app.use("/api", publicRoutes);

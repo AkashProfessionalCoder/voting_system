@@ -5,6 +5,7 @@ import OtpInput from "../components/OtpInput";
 import SuccessScreen from "../components/SuccessScreen";
 import Loader from "../components/Loader";
 import AnimatedBackgroundLayout from "../components/AnimatedBackgroundLayout";
+import ThemeToggle from "../components/ThemeToggle";
 import {
   getNominees,
   getDeadline,
@@ -208,18 +209,21 @@ export default function VotingPage() {
       {/* Header */}
       <header className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border-b border-white/40 dark:border-gray-700/50 shadow-sm sticky top-0 z-20">
         <div className="max-w-4xl mx-auto px-4 py-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-lg">F</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                <span className="text-white font-bold text-lg">F</span>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  Flutter Chennai
+                </h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Annual Community Vote 2026
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                Flutter Chennai
-              </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Annual Community Vote 2026
-              </p>
-            </div>
+            <ThemeToggle />
           </div>
           {deadline && (
             <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">

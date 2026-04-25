@@ -1,16 +1,6 @@
 const rateLimit = require("express-rate-limit");
 const { RATE_LIMITS } = require("../config/constants");
 
-/**
- * General API rate limiter
- */
-const apiLimiter = rateLimit({
-  windowMs: RATE_LIMITS.GLOBAL_API.WINDOW_MS,
-  max: RATE_LIMITS.GLOBAL_API.MAX_REQUESTS,
-  message: { error: "Too many requests. Please try again later." },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
 
 /**
  * OTP request rate limiter — max 5 requests per IP per hour
@@ -35,4 +25,4 @@ const otpVerifyLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-module.exports = { apiLimiter, otpLimiter, otpVerifyLimiter };
+module.exports = { otpLimiter, otpVerifyLimiter };
