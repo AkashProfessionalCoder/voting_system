@@ -248,7 +248,7 @@ export default function VotingPage() {
 
   if (loading) return <Loader text="Loading nominees..." />;
 
-  if (isDeadlinePassed) {
+  if (!loading && isDeadlinePassed) {
     return (
       <AnimatedBackgroundLayout>
         <div className="min-h-screen flex items-center justify-center p-4">
