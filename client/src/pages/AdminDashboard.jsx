@@ -777,6 +777,27 @@ export default function AdminDashboard() {
                       Set
                     </button>
                   </div>
+
+                  {/* Timezone intimation — shown as soon as the admin picks a date */}
+                  {deadlineInput && (
+                    <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/40 rounded-lg space-y-1">
+                      <p className="text-xs text-blue-700 dark:text-blue-300">
+                        🕐 <span className="font-semibold">Your local time:</span>{" "}
+                        {new Date(deadlineInput).toLocaleString(undefined, {
+                          dateStyle: "full",
+                          timeStyle: "short",
+                        })}
+                      </p>
+                      <p className="text-xs text-blue-500 dark:text-blue-400">
+                        🌐 <span className="font-semibold">Stored as UTC:</span>{" "}
+                        {new Date(deadlineInput).toUTCString()}
+                      </p>
+                      <p className="text-xs text-blue-400 dark:text-blue-500 italic">
+                        The deadline is always saved in UTC. Voters see it converted to their local time.
+                      </p>
+                    </div>
+                  )}
+
                   {deadlineMsg && (
                     <p className="mt-2 text-sm text-green-600 dark:text-green-400">
                       {deadlineMsg}
