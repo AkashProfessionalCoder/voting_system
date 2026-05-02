@@ -1,9 +1,13 @@
 const jwt = require("jsonwebtoken");
+const Admin = require("../models/Admin");
 
 /**
- * Verify JWT token for admin routes
+ * Verify JWT token for admin routes.
+ * Also checks that the token was issued AFTER the last password change —
+ * this invalidates all old tokens across all sessions/devices when the
+ * admin password is changed.
  */
-const verifyAdminToken = (req, res, next) => {
+const verifyAdminToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -17,6 +21,17 @@ const verifyAdminToken = (req, res, next) => {
 
     if (decoded.role !== "admin") {
       return res.status(403).json({ error: "Access denied. Admin only." });
+    }
+
+    // Check whether the password was changed after this token was issued
+    const admin = await Admin.findOne({ username: decoded.username });
+    if (admin?.passwordChangedAt) {
+      const changedAt = Math.floor(admin.passwordChangedAt.getTime() / 1000);
+      if (decoded.iat < changedAt) {
+        return res
+          .status(401)
+          .json({ error: "Session expired. Password was changed. Please log in again." });
+      }
     }
 
     req.admin = decoded;

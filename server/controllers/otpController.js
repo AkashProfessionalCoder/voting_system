@@ -4,6 +4,7 @@ const User = require("../models/User");
 const { generateOtp, getOtpExpiry } = require("../services/otpService");
 const { sendOtpEmail } = require("../services/emailService");
 const { canonicalizeEmail } = require("../utils/emailUtils");
+const { getActiveDeadline } = require("../utils/deadlineUtils");
 const { RATE_LIMITS } = require("../config/constants");
 
 const GMAIL_REGEX = /^[a-zA-Z0-9.\+]+@gmail\.com$/;
@@ -30,8 +31,8 @@ const requestOtp = async (req, res) => {
         .json({ error: "Only @gmail.com addresses are allowed." });
     }
 
-    // Check voting deadline before sending OTP
-    const deadline = process.env.VOTING_DEADLINE;
+    // Check voting deadline before sending OTP (reads DB first, falls back to env)
+    const deadline = await getActiveDeadline();
     if (deadline && new Date() > new Date(deadline)) {
       return res.status(403).json({ error: "Voting deadline has passed." });
     }
