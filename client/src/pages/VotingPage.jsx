@@ -12,7 +12,7 @@ import {
   getDeadline,
   requestOtp,
   verifyOtp,
-  castVote,
+  castVotes,
   checkVoteStatus,
 } from "../services/api";
 
@@ -144,6 +144,7 @@ export default function VotingPage() {
 
       await requestOtp(trimmed);
       setCountdown(60);
+      setError(""); // clear any pre-validation warnings before showing OTP screen
       setStep(STEPS.OTP);
     } catch (err) {
       const msg = err.response?.data?.error || "Failed to send OTP.";
@@ -163,60 +164,27 @@ export default function VotingPage() {
     }
 
     setSubmitting(true);
-    // Track whether we advanced past OTP verification so the catch block
-    // knows which step to revert to (avoids stale closure on `step`).
     let submittingVotes = false;
     try {
       // Step 1: Verify OTP → get short-lived JWT
       const verifyRes = await verifyOtp(email.trim().toLowerCase(), otp);
       const voteToken = verifyRes.data.token;
 
-      // Step 2: Cast all selected votes using the same token
+      // Step 2: Send ALL selections in one batch request
       submittingVotes = true;
       setStep(STEPS.SUBMITTING);
 
-      const entries = Object.entries(selectedNominees); // [[category, nomineeId], ...]
+      const nomineeIds = Object.values(selectedNominees); // [nomineeId, ...]
+      const categories = Object.keys(selectedNominees);   // [category, ...]
 
-      const voteResults = await Promise.allSettled(
-        entries.map(([, nomineeId]) => castVote(nomineeId, voteToken))
-      );
+      const voteRes = await castVotes(nomineeIds, voteToken);
+      const recordedCategories = voteRes.data.categories || categories;
 
-      // Partition results
-      const succeeded = voteResults
-        .map((r, i) => ({ ...r, category: entries[i][0] }))
-        .filter((r) => r.status === "fulfilled");
-
-      const failed = voteResults
-        .map((r, i) => ({ ...r, category: entries[i][0] }))
-        .filter((r) => r.status === "rejected");
-
-      if (succeeded.length > 0) {
-        setVotedCategories(succeeded.map((r) => r.category));
-
-        if (failed.length > 0) {
-          // Partial success — surface individual failures to the voter
-          const msgs = failed.map(
-            (r) =>
-              r.reason?.response?.data?.error ||
-              `Failed to record vote in "${r.category}"`
-          );
-          setPartialErrors(msgs);
-          setStep(STEPS.PARTIAL);
-        } else {
-          setStep(STEPS.SUCCESS);
-        }
-      } else {
-        // All failed
-        const firstError =
-          failed[0]?.reason?.response?.data?.error ||
-          "All votes failed. Please try again.";
-        setError(firstError);
-        setStep(STEPS.OTP);
-      }
+      setVotedCategories(recordedCategories);
+      setStep(STEPS.SUCCESS);
     } catch (err) {
       const msg = err.response?.data?.error || "Verification failed.";
       setError(msg);
-      // Revert to the appropriate step depending on where we failed
       setStep(submittingVotes ? STEPS.OTP : STEPS.OTP);
     } finally {
       setSubmitting(false);
@@ -226,6 +194,7 @@ export default function VotingPage() {
   const handleResendOtp = async () => {
     if (countdown > 0) return;
     setError("");
+    setOtp("");
     setSubmitting(true);
     try {
       await requestOtp(email.trim().toLowerCase());
