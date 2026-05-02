@@ -14,10 +14,12 @@ export const checkVoteStatus = (email) =>
 export const requestOtp = (email) => api.post("/otp/request", { email });
 export const verifyOtp = (email, otp) =>
   api.post("/otp/verify", { email, otp });
-export const castVote = (nomineeId, token) =>
+// Batch vote — sends ALL selections in one request; server resolves categories.
+// nomineeIds: string[]  (one per selected category)
+export const castVotes = (nomineeIds, token) =>
   api.post(
-    "/vote",
-    { nomineeId },
+    "/votes",
+    { votes: nomineeIds.map((nomineeId) => ({ nomineeId })) },
     { headers: { Authorization: `Bearer ${token}` } },
   );
 

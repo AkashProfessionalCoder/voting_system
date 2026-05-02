@@ -5,70 +5,115 @@ const { canonicalizeEmail } = require("../utils/emailUtils");
 const { getActiveDeadline } = require("../utils/deadlineUtils");
 
 /**
- * POST /api/vote
- * Cast a vote for a nominee (requires verified OTP token).
- * Enforces: one vote per email per category.
+ * POST /api/votes  (batch — replaces the old per-nominee /api/vote)
+ *
+ * Body: { votes: [{ nomineeId: "..." }, ...] }
+ *
+ * Security model:
+ *  - Requires a valid voter JWT (issued by verifyOtp)
+ *  - Resolves nominee → category server-side; client never supplies the category
+ *  - Enforces one-vote-per-category via DB unique index + explicit duplicate check
+ *  - Marks the underlying OtpRequest as consumed so the token cannot be replayed
+ *  - Rejects duplicate nomineeIds or duplicate categories in the same submission
  */
-const castVote = async (req, res) => {
+const castVotes = async (req, res) => {
   try {
-    const { nomineeId } = req.body;
-    const { email } = req.voter; // from JWT middleware
+    const { votes } = req.body;
+    const { email, jti } = req.voter; // jti = OTP record id embedded in JWT
 
-    if (!nomineeId) {
-      return res.status(400).json({ error: "Nominee selection is required." });
+    // ── Input validation ─────────────────────────────────────────────────────
+    if (!Array.isArray(votes) || votes.length === 0) {
+      return res.status(400).json({ error: "At least one vote selection is required." });
+    }
+    if (votes.length > 10) {
+      return res.status(400).json({ error: "Too many selections in a single request." });
     }
 
-    // Validate nomineeId format
-    if (!mongoose.Types.ObjectId.isValid(nomineeId)) {
-      return res.status(400).json({ error: "Invalid nominee ID." });
+    const nomineeIds = votes.map((v) => v?.nomineeId).filter(Boolean);
+    if (nomineeIds.length !== votes.length) {
+      return res.status(400).json({ error: "Each vote must include a nomineeId." });
     }
 
-    // Check voting deadline
-    const deadline = process.env.VOTING_DEADLINE;
-    if (deadline && new Date() > new Date(deadline)) {
+    // Validate all IDs are valid ObjectIds
+    const invalidId = nomineeIds.find((id) => !mongoose.Types.ObjectId.isValid(id));
+    if (invalidId) {
+      return res.status(400).json({ error: "Invalid nominee ID provided." });
+    }
+
+    // Reject duplicate nomineeIds in the submission
+    const uniqueNomineeIds = new Set(nomineeIds);
+    if (uniqueNomineeIds.size !== nomineeIds.length) {
+      return res.status(400).json({ error: "Duplicate nominee selections are not allowed." });
+    }
+
+    // ── Token replay prevention ───────────────────────────────────────────────
+    if (jti) {
+      const OtpRequest = require("../models/OtpRequest");
+      const otpRecord = await OtpRequest.findOneAndUpdate(
+        { _id: jti, verified: true, consumed: { $ne: true } },
+        { $set: { consumed: true } }
+      );
+      if (!otpRecord) {
+        return res.status(401).json({ error: "This session has already been used to vote. Please request a new OTP." });
+      }
+    }
+
+    // ── Deadline check ────────────────────────────────────────────────────────
+    const deadline = await getActiveDeadline();
+    if (deadline && new Date() > deadline) {
       return res.status(403).json({ error: "Voting deadline has passed." });
     }
 
-    // Verify nominee exists and get their category
-    const nominee = await Nominee.findById(nomineeId);
-    if (!nominee) {
-      return res.status(404).json({ error: "Nominee not found." });
+    // ── Resolve nominees → categories (server-side, not trusted from client) ──
+    const nominees = await Nominee.find({ _id: { $in: nomineeIds } });
+    if (nominees.length !== nomineeIds.length) {
+      return res.status(404).json({ error: "One or more nominees were not found." });
     }
 
-    const { category } = nominee;
+    // Build map: nomineeId → nominee doc
+    const nomineeMap = Object.fromEntries(nominees.map((n) => [n._id.toString(), n]));
 
-    // Explicit duplicate check: has this email already voted in this category?
-    const existingVote = await Vote.findOne({ email, category });
-    if (existingVote) {
+    // Reject duplicate categories in the submission
+    const categories = nominees.map((n) => n.category);
+    const uniqueCategories = new Set(categories);
+    if (uniqueCategories.size !== categories.length) {
+      return res.status(400).json({ error: "You may only vote once per category." });
+    }
+
+    // ── Check which categories this email has already voted in ────────────────
+    const existingVotes = await Vote.find({ email, category: { $in: categories } }).select("category -_id");
+    if (existingVotes.length > 0) {
+      const alreadyVoted = existingVotes.map((v) => v.category);
       return res.status(409).json({
-        error: `You have already voted in the "${category}" category.`,
-        category,
+        error: `You have already voted in: ${alreadyVoted.map((c) => `"${c}"`).join(", ")}.`,
+        categories: alreadyVoted,
       });
     }
 
-    // Attempt to insert vote — compound unique index (email + category) is the
-    // final safety net against race conditions.
+    // ── Insert all votes ──────────────────────────────────────────────────────
+    const voteDocs = nomineeIds.map((id) => ({
+      email,
+      nomineeId: id,
+      category: nomineeMap[id].category,
+    }));
+
     try {
-      await Vote.create({ email, nomineeId, category });
+      await Vote.insertMany(voteDocs, { ordered: false });
     } catch (err) {
-      if (err.code === 11000) {
-        return res.status(409).json({
-          error: `You have already voted in the "${category}" category.`,
-          category,
-        });
+      // 11000 = duplicate key — race condition guard (compound unique index)
+      if (err.code === 11000 || err.writeErrors?.some?.((e) => e.code === 11000)) {
+        return res.status(409).json({ error: "A concurrent vote was already recorded for one of these categories." });
       }
       throw err;
     }
 
     return res.status(200).json({
-      message: "Vote recorded successfully.",
-      category,
+      message: "Votes recorded successfully.",
+      categories,
     });
   } catch (error) {
-    console.error("Vote error:", error);
-    return res
-      .status(500)
-      .json({ error: "Failed to record vote. Please try again." });
+    console.error("Batch vote error:", error);
+    return res.status(500).json({ error: "Failed to record votes. Please try again." });
   }
 };
 
@@ -122,4 +167,4 @@ const getDeadline = async (req, res) => {
   }
 };
 
-module.exports = { castVote, checkVoteStatus, getDeadline };
+module.exports = { castVotes, checkVoteStatus, getDeadline };
