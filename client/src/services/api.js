@@ -8,9 +8,9 @@ const api = axios.create({
 // Public endpoints
 export const getNominees = () => api.get("/nominees");
 export const getDeadline = () => api.get("/deadline");
-// Returns { votes: { [category]: nomineeId } } — one entry per category voted in.
+// Returns { votes: { [category]: true } } — booleans only, email sent in body (not URL).
 export const checkVoteStatus = (email) =>
-  api.get(`/vote/status?email=${encodeURIComponent(email)}`);
+  api.post("/vote/status", { email });
 export const requestOtp = (email) => api.post("/otp/request", { email });
 export const verifyOtp = (email, otp) =>
   api.post("/otp/verify", { email, otp });

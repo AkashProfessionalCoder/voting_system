@@ -87,7 +87,7 @@ const verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    if (!email || !otp) {
+    if (!email || !otp || typeof email !== "string" || typeof otp !== "string") {
       return res.status(400).json({ error: "Email and OTP are required." });
     }
 

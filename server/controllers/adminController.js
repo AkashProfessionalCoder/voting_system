@@ -195,7 +195,7 @@ const setDeadline = async (req, res) => {
 const truncateVotes = async (req, res) => {
   try {
     await Vote.deleteMany({});
-    return res.status(200).json({ message: "All votes have been successfully deleted." });
+    return res.status(200).json({ message: "All votes have been deleted successfully." });
   } catch (error) {
     console.error("Truncate votes error:", error);
     return res.status(500).json({ error: "Failed to truncate votes." });

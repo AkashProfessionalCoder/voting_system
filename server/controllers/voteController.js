@@ -72,30 +72,31 @@ const castVote = async (req, res) => {
 };
 
 /**
- * GET /api/vote/status?email=...
- * Returns which categories the given email has already voted in,
- * along with the nomineeId chosen per category.
+/**
+ * POST /api/vote/status
+ * Returns which categories the given email has already voted in.
+ * Email is accepted in the request body to avoid PII in server logs.
  *
  * Response shape:
- *   { votes: { "Community Impact": "<nomineeId>", ... } }
+ *   { votes: { "Community Impact": true, ... } }  — booleans only, no nomineeIds.
  */
 const checkVoteStatus = async (req, res) => {
   try {
-    const { email } = req.query;
+    const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ error: "Email is required." });
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: "Email is required and must be a string." });
     }
 
     const canonicalEmail = canonicalizeEmail(email);
 
     const existingVotes = await Vote.find({ email: canonicalEmail }).select(
-      "category nomineeId -_id"
+      "category -_id"
     );
 
-    // Build a map: { category -> nomineeId }
+    // Return only category presence (boolean) — no nomineeIds exposed to callers.
     const votes = existingVotes.reduce((acc, v) => {
-      acc[v.category] = v.nomineeId.toString();
+      acc[v.category] = true;
       return acc;
     }, {});
 
