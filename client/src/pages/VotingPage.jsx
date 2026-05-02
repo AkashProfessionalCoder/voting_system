@@ -37,6 +37,7 @@ export default function VotingPage() {
   // Form state
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [verifiedToken, setVerifiedToken] = useState("");
 
   // Error / loading states
   const [error, setError] = useState("");
@@ -144,6 +145,7 @@ export default function VotingPage() {
 
       await requestOtp(trimmed);
       setCountdown(60);
+      setVerifiedToken(""); // Clear any previous token
       setError(""); // clear any pre-validation warnings before showing OTP screen
       setStep(STEPS.OTP);
     } catch (err) {
@@ -158,7 +160,7 @@ export default function VotingPage() {
     setFieldError("");
     setError("");
 
-    if (otp.length !== 6) {
+    if (!verifiedToken && otp.length !== 6) {
       setFieldError("Please enter the complete 6-digit OTP.");
       return;
     }
@@ -166,9 +168,14 @@ export default function VotingPage() {
     setSubmitting(true);
     let submittingVotes = false;
     try {
-      // Step 1: Verify OTP → get short-lived JWT
-      const verifyRes = await verifyOtp(email.trim().toLowerCase(), otp);
-      const voteToken = verifyRes.data.token;
+      let voteToken = verifiedToken;
+      
+      // Step 1: Verify OTP → get short-lived JWT (skip if already verified)
+      if (!voteToken) {
+        const verifyRes = await verifyOtp(email.trim().toLowerCase(), otp);
+        voteToken = verifyRes.data.token;
+        setVerifiedToken(voteToken);
+      }
 
       // Step 2: Send ALL selections in one batch request
       submittingVotes = true;
@@ -183,9 +190,9 @@ export default function VotingPage() {
       setVotedCategories(recordedCategories);
       setStep(STEPS.SUCCESS);
     } catch (err) {
-      const msg = err.response?.data?.error || "Verification failed.";
+      const msg = err.response?.data?.error || (submittingVotes ? "Vote submission failed. Please try again." : "Verification failed.");
       setError(msg);
-      setStep(submittingVotes ? STEPS.OTP : STEPS.OTP);
+      setStep(STEPS.OTP);
     } finally {
       setSubmitting(false);
     }
@@ -200,6 +207,7 @@ export default function VotingPage() {
       await requestOtp(email.trim().toLowerCase());
       setCountdown(60);
       setOtp("");
+      setVerifiedToken("");
     } catch (err) {
       const msg = err.response?.data?.error || "Failed to resend OTP.";
       setError(msg);
@@ -211,8 +219,12 @@ export default function VotingPage() {
   const handleBack = () => {
     setError("");
     setFieldError("");
-    if (step === STEPS.OTP) setStep(STEPS.EMAIL);
-    else if (step === STEPS.EMAIL) setStep(STEPS.SELECT);
+    if (step === STEPS.OTP) {
+      setStep(STEPS.EMAIL);
+      setVerifiedToken(""); // clear token if they go back to change email
+    } else if (step === STEPS.EMAIL) {
+      setStep(STEPS.SELECT);
+    }
   };
 
   if (loading) return <Loader text="Loading nominees..." />;
