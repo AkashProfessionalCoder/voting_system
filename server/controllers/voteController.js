@@ -110,16 +110,15 @@ const checkVoteStatus = async (req, res) => {
 
 /**
  * GET /api/deadline
- * Return the voting deadline — reads from DB first, falls back to env var.
+ * Return the voting deadline from MongoDB (DB is the only source of truth).
  */
 const getDeadline = async (req, res) => {
   try {
     const deadline = await getActiveDeadline();
     return res.status(200).json({ deadline: deadline ? deadline.toISOString() : null });
   } catch (error) {
-    // Fallback to env if DB fails
-    const deadline = process.env.VOTING_DEADLINE || null;
-    return res.status(200).json({ deadline });
+    console.error("Get deadline error:", error);
+    return res.status(500).json({ error: "Failed to fetch deadline." });
   }
 };
 
