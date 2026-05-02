@@ -7,6 +7,7 @@ const {
   getVoters,
   exportVotes,
   setDeadline,
+  truncateVotes,
 } = require("../controllers/adminController");
 const {
   addNominee,
@@ -21,6 +22,7 @@ router.post("/login", login);
 // Protected admin routes
 router.get("/results", verifyAdminToken, getResults);
 router.get("/voters", verifyAdminToken, getVoters);
+router.delete("/voters/truncate", verifyAdminToken, truncateVotes);
 router.get("/export", verifyAdminToken, exportVotes);
 router.put("/deadline", verifyAdminToken, setDeadline);
 

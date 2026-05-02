@@ -3,9 +3,10 @@ const OtpRequest = require("../models/OtpRequest");
 const User = require("../models/User");
 const { generateOtp, getOtpExpiry } = require("../services/otpService");
 const { sendOtpEmail } = require("../services/emailService");
+const { canonicalizeEmail } = require("../utils/emailUtils");
 const { RATE_LIMITS } = require("../config/constants");
 
-const GMAIL_REGEX = /^[a-zA-Z0-9.]+@gmail\.com$/;
+const GMAIL_REGEX = /^[a-zA-Z0-9.\+]+@gmail\.com$/;
 
 /**
  * POST /api/otp/request
@@ -19,10 +20,11 @@ const requestOtp = async (req, res) => {
       return res.status(400).json({ error: "Email is required." });
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
+    const originalEmail = email.trim().toLowerCase();
+    const canonicalEmail = canonicalizeEmail(originalEmail);
 
     // Gmail-only validation
-    if (!GMAIL_REGEX.test(normalizedEmail)) {
+    if (!GMAIL_REGEX.test(originalEmail)) {
       return res
         .status(400)
         .json({ error: "Only @gmail.com addresses are allowed." });
@@ -34,17 +36,10 @@ const requestOtp = async (req, res) => {
       return res.status(403).json({ error: "Voting deadline has passed." });
     }
 
-    // Check if user has already voted
-    const Vote = require("../models/Vote");
-    const existingVote = await Vote.findOne({ email: normalizedEmail });
-    if (existingVote) {
-      return res.status(409).json({ error: "You have already voted." });
-    }
-
     // Rate limit: max requests per email per hour
     const oneHourAgo = new Date(Date.now() - RATE_LIMITS.OTP_REQUEST.WINDOW_MS);
     const recentRequests = await OtpRequest.countDocuments({
-      email: normalizedEmail,
+      email: canonicalEmail,
       createdAt: { $gte: oneHourAgo },
     });
 
@@ -60,20 +55,20 @@ const requestOtp = async (req, res) => {
 
     // Save OTP to database
     await OtpRequest.create({
-      email: normalizedEmail,
+      email: canonicalEmail,
       otp,
       expiresAt,
     });
 
     // Upsert user record
     await User.findOneAndUpdate(
-      { email: normalizedEmail },
-      { email: normalizedEmail },
+      { email: canonicalEmail },
+      { email: canonicalEmail },
       { upsert: true, returnDocument: 'after' },
     );
 
     // Send OTP email
-    await sendOtpEmail(normalizedEmail, otp);
+    await sendOtpEmail(originalEmail, otp);
 
     return res.status(200).json({ message: "OTP sent to email." });
   } catch (error) {
@@ -96,9 +91,10 @@ const verifyOtp = async (req, res) => {
       return res.status(400).json({ error: "Email and OTP are required." });
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
+    const originalEmail = email.trim().toLowerCase();
+    const canonicalEmail = canonicalizeEmail(originalEmail);
 
-    if (!GMAIL_REGEX.test(normalizedEmail)) {
+    if (!GMAIL_REGEX.test(originalEmail)) {
       return res
         .status(400)
         .json({ error: "Only @gmail.com addresses are allowed." });
@@ -107,7 +103,7 @@ const verifyOtp = async (req, res) => {
     // Atomic find-and-mark to prevent race conditions
     const otpRecord = await OtpRequest.findOneAndUpdate(
       {
-        email: normalizedEmail,
+        email: canonicalEmail,
         otp,
         verified: false,
         expiresAt: { $gt: new Date() },
@@ -121,11 +117,11 @@ const verifyOtp = async (req, res) => {
     }
 
     // Update user as verified
-    await User.findOneAndUpdate({ email: normalizedEmail }, { verified: true });
+    await User.findOneAndUpdate({ email: canonicalEmail }, { verified: true });
 
     // Generate short-lived JWT (15 minutes to cast vote)
     const token = jwt.sign(
-      { email: normalizedEmail, role: "voter" },
+      { email: canonicalEmail, role: "voter" },
       process.env.JWT_SECRET,
       { expiresIn: "15m" },
     );

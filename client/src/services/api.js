@@ -8,6 +8,7 @@ const api = axios.create({
 // Public endpoints
 export const getNominees = () => api.get("/nominees");
 export const getDeadline = () => api.get("/deadline");
+// Returns { votes: { [category]: nomineeId } } — one entry per category voted in.
 export const checkVoteStatus = (email) =>
   api.get(`/vote/status?email=${encodeURIComponent(email)}`);
 export const requestOtp = (email) => api.post("/otp/request", { email });
@@ -29,6 +30,11 @@ export const getResults = (token) =>
 
 export const getVoters = (token) =>
   api.get("/admin/voters", { headers: { Authorization: `Bearer ${token}` } });
+
+export const truncateVotes = (token) =>
+  api.delete("/admin/voters/truncate", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 
 export const addNominee = (data, token) =>
   api.post("/admin/nominees", data, {

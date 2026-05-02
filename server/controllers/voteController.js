@@ -1,10 +1,12 @@
 const mongoose = require("mongoose");
 const Vote = require("../models/Vote");
 const Nominee = require("../models/Nominee");
+const { canonicalizeEmail } = require("../utils/emailUtils");
 
 /**
  * POST /api/vote
- * Cast a vote (requires verified OTP token)
+ * Cast a vote for a nominee (requires verified OTP token).
+ * Enforces: one vote per email per category.
  */
 const castVote = async (req, res) => {
   try {
@@ -26,27 +28,41 @@ const castVote = async (req, res) => {
       return res.status(403).json({ error: "Voting deadline has passed." });
     }
 
-    // Verify nominee exists
+    // Verify nominee exists and get their category
     const nominee = await Nominee.findById(nomineeId);
     if (!nominee) {
       return res.status(404).json({ error: "Nominee not found." });
     }
 
-    // Attempt to insert vote — unique index on email prevents duplicates
-    try {
-      await Vote.create({
-        email,
-        nomineeId,
+    const { category } = nominee;
+
+    // Explicit duplicate check: has this email already voted in this category?
+    const existingVote = await Vote.findOne({ email, category });
+    if (existingVote) {
+      return res.status(409).json({
+        error: `You have already voted in the "${category}" category.`,
+        category,
       });
+    }
+
+    // Attempt to insert vote — compound unique index (email + category) is the
+    // final safety net against race conditions.
+    try {
+      await Vote.create({ email, nomineeId, category });
     } catch (err) {
       if (err.code === 11000) {
-        // Duplicate key error = already voted
-        return res.status(409).json({ error: "You have already voted." });
+        return res.status(409).json({
+          error: `You have already voted in the "${category}" category.`,
+          category,
+        });
       }
       throw err;
     }
 
-    return res.status(200).json({ message: "Vote recorded successfully." });
+    return res.status(200).json({
+      message: "Vote recorded successfully.",
+      category,
+    });
   } catch (error) {
     console.error("Vote error:", error);
     return res
@@ -57,7 +73,11 @@ const castVote = async (req, res) => {
 
 /**
  * GET /api/vote/status?email=...
- * Check if an email has already voted
+ * Returns which categories the given email has already voted in,
+ * along with the nomineeId chosen per category.
+ *
+ * Response shape:
+ *   { votes: { "Community Impact": "<nomineeId>", ... } }
  */
 const checkVoteStatus = async (req, res) => {
   try {
@@ -67,10 +87,19 @@ const checkVoteStatus = async (req, res) => {
       return res.status(400).json({ error: "Email is required." });
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
-    const existingVote = await Vote.findOne({ email: normalizedEmail });
+    const canonicalEmail = canonicalizeEmail(email);
 
-    return res.status(200).json({ hasVoted: !!existingVote });
+    const existingVotes = await Vote.find({ email: canonicalEmail }).select(
+      "category nomineeId -_id"
+    );
+
+    // Build a map: { category -> nomineeId }
+    const votes = existingVotes.reduce((acc, v) => {
+      acc[v.category] = v.nomineeId.toString();
+      return acc;
+    }, {});
+
+    return res.status(200).json({ votes });
   } catch (error) {
     console.error("Vote status error:", error);
     return res.status(500).json({ error: "Failed to check vote status." });
