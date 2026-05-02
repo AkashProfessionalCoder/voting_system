@@ -414,7 +414,7 @@ export default function VotingPage() {
                   <div key={category}>
                     {/* Category header with ✅/❌ indicator */}
                     <div className="flex items-center gap-3 mb-3">
-                      <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                      <h3 className="text-base font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                         {category}
                       </h3>
                       {isVotedInCategory ? (

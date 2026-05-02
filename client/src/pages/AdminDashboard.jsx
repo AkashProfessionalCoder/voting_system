@@ -45,6 +45,8 @@ export default function AdminDashboard() {
     linkedin: "",
     twitter: "",
     github: "",
+    medium: "",
+    website: "",
   });
   const [addingNominee, setAddingNominee] = useState(false);
   const [editingNomineeId, setEditingNomineeId] = useState(null);
@@ -141,6 +143,8 @@ export default function AdminDashboard() {
         linkedin: "",
         twitter: "",
         github: "",
+        medium: "",
+        website: "",
       });
       setEditingNomineeId(null);
       await fetchDashboardData();
@@ -161,6 +165,8 @@ export default function AdminDashboard() {
       linkedin: nominee.linkedin || "",
       twitter: nominee.twitter || "",
       github: nominee.github || "",
+      medium: nominee.medium || "",
+      website: nominee.website || "",
     });
     // Scroll to form smoothly
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -610,6 +616,24 @@ export default function AdminDashboard() {
                       }
                       className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
+                    <input
+                      type="text"
+                      placeholder="Medium URL (optional)"
+                      value={newNominee.medium}
+                      onChange={(e) =>
+                        setNewNominee({ ...newNominee, medium: e.target.value })
+                      }
+                      className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Personal Website URL (optional)"
+                      value={newNominee.website}
+                      onChange={(e) =>
+                        setNewNominee({ ...newNominee, website: e.target.value })
+                      }
+                      className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -636,6 +660,8 @@ export default function AdminDashboard() {
                             linkedin: "",
                             twitter: "",
                             github: "",
+                            medium: "",
+                            website: "",
                           });
                         }}
                         className="mt-3 px-6 py-2 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 transition-colors"
@@ -718,6 +744,39 @@ export default function AdminDashboard() {
                                   viewBox="0 0 24 24"
                                 >
                                   <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+                                </svg>
+                              </a>
+                            )}
+                            {n.medium && (
+                              <a
+                                href={n.medium}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-gray-700 hover:text-black dark:text-gray-400 dark:hover:text-white"
+                              >
+                                <svg
+                                  className="w-3.5 h-3.5"
+                                  fill="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/>
+                                </svg>
+                              </a>
+                            )}
+                            {n.website && (
+                              <a
+                                href={n.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
+                              >
+                                <svg
+                                  className="w-3.5 h-3.5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                 </svg>
                               </a>
                             )}
