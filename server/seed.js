@@ -13,6 +13,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const Admin = require("./models/Admin");
 const Nominee = require("./models/Nominee");
+const Settings = require("./models/Settings");
 const connectDB = require("./config/db");
 
 const seed = async () => {
@@ -111,6 +112,24 @@ const seed = async () => {
   console.log("  - Developer     : 2 nominees");
   console.log("  - Founders      : 2 nominees");
   console.log("  - Organizer     : 3 nominees");
+
+  // ── Voting Deadline ───────────────────────────────────────────────────────
+  const envDeadline = process.env.VOTING_DEADLINE;
+  if (envDeadline) {
+    const date = new Date(envDeadline);
+    if (!isNaN(date.getTime())) {
+      await Settings.findOneAndUpdate(
+        { key: "global" },
+        { votingDeadline: date },
+        { upsert: true }
+      );
+      console.log(`Voting deadline set to: ${date.toLocaleString()}`);
+    } else {
+      console.warn("⚠️  VOTING_DEADLINE in .env is not a valid date — skipped.");
+    }
+  } else {
+    console.log("ℹ️  No VOTING_DEADLINE in .env — deadline unchanged.");
+  }
 
   await mongoose.disconnect();
   console.log("Seed complete");

@@ -1,22 +1,16 @@
 const Settings = require("../models/Settings");
 
 /**
- * Get the active voting deadline.
- * Priority: DB (persisted via admin panel) → VOTING_DEADLINE env var → null.
+ * Get the active voting deadline from MongoDB.
+ * The VOTING_DEADLINE env var is only used by seed.js — not here.
  */
 const getActiveDeadline = async () => {
-  try {
-    const settings = await Settings.findOne({ key: "global" });
-    if (settings?.votingDeadline) return settings.votingDeadline;
-  } catch (_) {
-    // Fall through to env var if DB is unreachable
-  }
-  const envDeadline = process.env.VOTING_DEADLINE;
-  return envDeadline ? new Date(envDeadline) : null;
+  const settings = await Settings.findOne({ key: "global" });
+  return settings?.votingDeadline ?? null;
 };
 
 /**
- * Set / update the voting deadline, persisting it in MongoDB.
+ * Set / update the voting deadline in MongoDB.
  */
 const setActiveDeadline = async (date) => {
   await Settings.findOneAndUpdate(
