@@ -10,6 +10,7 @@ import {
   getDeadline,
   addNominee,
   updateNominee,
+  deleteNominee,
   exportVotes,
   setDeadline as setDeadlineApi,
   truncateVotes,
@@ -391,8 +392,10 @@ export default function AdminDashboard() {
                 ) : (
                   resultCategories.map((category) => {
                     const catResults = resultsByCategory[category];
-                    const catTotal = categoryTotals[category] || 1;
-                    const maxInCat = Math.max(...catResults.map((r) => r.voteCount));
+                    const catTotal = categoryTotals[category] ?? 0;
+                    const maxInCat = catResults.length > 0
+                      ? Math.max(...catResults.map((r) => r.voteCount))
+                      : 0;
                     return (
                       <div key={category}>
                         {/* Category header */}
@@ -432,7 +435,7 @@ export default function AdminDashboard() {
                               <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
                                 <div
                                   className="bg-blue-600 h-2 rounded-full transition-all duration-500"
-                                  style={{ width: `${(r.voteCount / maxInCat) * 100}%` }}
+                                  style={{ width: maxInCat > 0 ? `${(r.voteCount / maxInCat) * 100}%` : "0%" }}
                                 />
                               </div>
                               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">

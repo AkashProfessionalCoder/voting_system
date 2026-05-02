@@ -22,6 +22,7 @@ const STEPS = {
   OTP: "otp",
   SUBMITTING: "submitting",
   SUCCESS: "success",
+  PARTIAL: "partial",
 };
 
 export default function VotingPage() {
@@ -45,6 +46,9 @@ export default function VotingPage() {
 
   // Voted categories list shown on success screen
   const [votedCategories, setVotedCategories] = useState([]);
+
+  // Partial failure messages surfaced to the voter
+  const [partialErrors, setPartialErrors] = useState([]);
 
   // Fetch nominees + deadline on mount
   useEffect(() => {
@@ -187,22 +191,20 @@ export default function VotingPage() {
         .filter((r) => r.status === "rejected");
 
       if (succeeded.length > 0) {
-        // At least some votes went through — show success
         setVotedCategories(succeeded.map((r) => r.category));
 
         if (failed.length > 0) {
-          // Partial success — list any failures as informational (e.g. already voted)
-          const failMsgs = failed
-            .map(
-              (r) =>
-                r.reason?.response?.data?.error ||
-                `Failed to record vote in "${r.category}"`
-            )
-            .join(". ");
-          console.warn("Partial vote failures:", failMsgs);
+          // Partial success — surface individual failures to the voter
+          const msgs = failed.map(
+            (r) =>
+              r.reason?.response?.data?.error ||
+              `Failed to record vote in "${r.category}"`
+          );
+          setPartialErrors(msgs);
+          setStep(STEPS.PARTIAL);
+        } else {
+          setStep(STEPS.SUCCESS);
         }
-
-        setStep(STEPS.SUCCESS);
       } else {
         // All failed
         const firstError =
@@ -357,6 +359,45 @@ export default function VotingPage() {
             votedCategories={votedCategories}
             onGoHome={() => window.location.reload()}
           />
+        )}
+
+        {/* PARTIAL SUCCESS */}
+        {step === STEPS.PARTIAL && (
+          <div className="text-center py-12 px-4">
+            <div className="w-20 h-20 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-yellow-500 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Partially Recorded</h2>
+            <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6">
+              Some votes were saved, but the following categories could not be recorded:
+            </p>
+            {votedCategories.length > 0 && (
+              <div className="mb-4 max-w-sm mx-auto space-y-2">
+                {votedCategories.map((cat) => (
+                  <div key={cat} className="flex items-center gap-3 px-4 py-2.5 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/30 rounded-xl">
+                    <span className="w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-full bg-green-500 text-white text-xs font-bold">✓</span>
+                    <span className="text-sm font-medium text-green-800 dark:text-green-300">{cat}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="max-w-sm mx-auto space-y-2 mb-6">
+              {partialErrors.map((msg, i) => (
+                <div key={i} className="flex items-start gap-3 px-4 py-2.5 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30 rounded-xl text-left">
+                  <span className="w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold mt-0.5">✕</span>
+                  <span className="text-sm font-medium text-red-800 dark:text-red-300">{msg}</span>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+            >
+              Return to Home Page
+            </button>
+          </div>
         )}
 
         {/* SUBMITTING */}
