@@ -6,7 +6,7 @@ export default function NomineeCard({ nominee, selected, onSelect }) {
 
   return (
     <button
-      onClick={() => onSelect(nominee._id)}
+      onClick={() => onSelect(nominee._id, nominee.category)}
       className={`
         relative w-full text-left rounded-xl border-2 p-5 transition-all duration-200 cursor-pointer
         hover:shadow-xl hover:-translate-y-0.5 backdrop-blur-sm

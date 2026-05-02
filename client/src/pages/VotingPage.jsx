@@ -6,12 +6,14 @@ import SuccessScreen from "../components/SuccessScreen";
 import Loader from "../components/Loader";
 import AnimatedBackgroundLayout from "../components/AnimatedBackgroundLayout";
 import ThemeToggle from "../components/ThemeToggle";
+import HowItWorks from "../components/HowItWorks";
 import {
   getNominees,
   getDeadline,
   requestOtp,
   verifyOtp,
   castVote,
+  checkVoteStatus,
 } from "../services/api";
 
 const STEPS = {
@@ -28,20 +30,23 @@ export default function VotingPage() {
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(STEPS.SELECT);
 
+  // Per-category selection: { [category]: nomineeId }
+  const [selectedNominees, setSelectedNominees] = useState({});
+
   // Form state
-  const [selectedNominee, setSelectedNominee] = useState(null);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [token, setToken] = useState("");
 
   // Error / loading states
   const [error, setError] = useState("");
   const [fieldError, setFieldError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
-  // Fetch nominees + deadline
+  // Voted categories list shown on success screen
+  const [votedCategories, setVotedCategories] = useState([]);
+
+  // Fetch nominees + deadline on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -69,21 +74,33 @@ export default function VotingPage() {
 
   const isDeadlinePassed = deadline && new Date() > new Date(deadline);
 
-  // Group nominees by category
+  // Group nominees by category (sorted alphabetically)
   const grouped = nominees.reduce((acc, n) => {
     if (!acc[n.category]) acc[n.category] = [];
     acc[n.category].push(n);
     return acc;
   }, {});
+  const categories = Object.keys(grouped).sort();
 
-  const handleSelectNominee = (id) => {
-    setSelectedNominee(id);
+  const selectedCount = Object.keys(selectedNominees).length;
+  const totalCategories = categories.length;
+
+  // Toggle: clicking the already-selected nominee deselects it
+  const handleSelectNominee = (nomineeId, category) => {
+    setSelectedNominees((prev) => {
+      if (prev[category] === nomineeId) {
+        const next = { ...prev };
+        delete next[category];
+        return next;
+      }
+      return { ...prev, [category]: nomineeId };
+    });
     setError("");
   };
 
   const handleProceedToEmail = () => {
-    if (!selectedNominee) {
-      setError("Please select a nominee.");
+    if (selectedCount === 0) {
+      setError("Please select at least one nominee before continuing.");
       return;
     }
     setError("");
@@ -99,15 +116,29 @@ export default function VotingPage() {
       setFieldError("Email is required.");
       return;
     }
-    if (!/^[a-zA-Z0-9.]+@gmail\.com$/.test(trimmed)) {
+    if (!/^[a-zA-Z0-9.\+]+@gmail\.com$/.test(trimmed)) {
       setFieldError("Only @gmail.com addresses are allowed.");
       return;
     }
 
     setSubmitting(true);
     try {
+      // Pre-validation: check if already voted in any selected categories
+      const statusRes = await checkVoteStatus(trimmed);
+      const pastVotes = statusRes.data.votes || {};
+      
+      const alreadyVotedCats = Object.keys(selectedNominees).filter(
+        (cat) => pastVotes[cat]
+      );
+      
+      if (alreadyVotedCats.length > 0) {
+        const catNames = alreadyVotedCats.map((c) => `"${c}"`).join(", ");
+        setError(`You have already voted in the ${catNames} categor${alreadyVotedCats.length > 1 ? 'ies' : 'y'}. Please go back and deselect ${alreadyVotedCats.length > 1 ? 'them' : 'it'} to continue.`);
+        setSubmitting(false);
+        return;
+      }
+
       await requestOtp(trimmed);
-      setOtpSent(true);
       setCountdown(60);
       setStep(STEPS.OTP);
     } catch (err) {
@@ -128,20 +159,63 @@ export default function VotingPage() {
     }
 
     setSubmitting(true);
+    // Track whether we advanced past OTP verification so the catch block
+    // knows which step to revert to (avoids stale closure on `step`).
+    let submittingVotes = false;
     try {
-      // Step 1: Verify OTP
+      // Step 1: Verify OTP → get short-lived JWT
       const verifyRes = await verifyOtp(email.trim().toLowerCase(), otp);
       const voteToken = verifyRes.data.token;
-      setToken(voteToken);
 
-      // Step 2: Cast vote
+      // Step 2: Cast all selected votes using the same token
+      submittingVotes = true;
       setStep(STEPS.SUBMITTING);
-      await castVote(selectedNominee, voteToken);
-      setStep(STEPS.SUCCESS);
+
+      const entries = Object.entries(selectedNominees); // [[category, nomineeId], ...]
+
+      const voteResults = await Promise.allSettled(
+        entries.map(([, nomineeId]) => castVote(nomineeId, voteToken))
+      );
+
+      // Partition results
+      const succeeded = voteResults
+        .map((r, i) => ({ ...r, category: entries[i][0] }))
+        .filter((r) => r.status === "fulfilled");
+
+      const failed = voteResults
+        .map((r, i) => ({ ...r, category: entries[i][0] }))
+        .filter((r) => r.status === "rejected");
+
+      if (succeeded.length > 0) {
+        // At least some votes went through — show success
+        setVotedCategories(succeeded.map((r) => r.category));
+
+        if (failed.length > 0) {
+          // Partial success — list any failures as informational (e.g. already voted)
+          const failMsgs = failed
+            .map(
+              (r) =>
+                r.reason?.response?.data?.error ||
+                `Failed to record vote in "${r.category}"`
+            )
+            .join(". ");
+          console.warn("Partial vote failures:", failMsgs);
+        }
+
+        setStep(STEPS.SUCCESS);
+      } else {
+        // All failed
+        const firstError =
+          failed[0]?.reason?.response?.data?.error ||
+          "All votes failed. Please try again.";
+        setError(firstError);
+        setStep(STEPS.OTP);
+      }
     } catch (err) {
       const msg = err.response?.data?.error || "Verification failed.";
       setError(msg);
-      if (step === STEPS.SUBMITTING) setStep(STEPS.OTP);
+      // Revert to the appropriate step depending on where we failed
+      setStep(submittingVotes ? STEPS.OTP : STEPS.OTP);
     } finally {
       setSubmitting(false);
     }
@@ -278,43 +352,101 @@ export default function VotingPage() {
         )}
 
         {/* SUCCESS */}
-        {step === STEPS.SUCCESS && <SuccessScreen />}
+        {step === STEPS.SUCCESS && (
+          <SuccessScreen
+            votedCategories={votedCategories}
+            onGoHome={() => window.location.reload()}
+          />
+        )}
 
         {/* SUBMITTING */}
-        {step === STEPS.SUBMITTING && <Loader text="Recording your vote..." />}
+        {step === STEPS.SUBMITTING && (
+          <Loader text="Recording your votes..." />
+        )}
 
-        {/* SELECT NOMINEE */}
+        {/* SELECT NOMINEES */}
         {step === STEPS.SELECT && (
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-              Choose Your Nominee
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-              Select the person you'd like to vote for.
-            </p>
+            {/* How Voting Works — shown at top of select step */}
+            <HowItWorks />
 
-            {Object.entries(grouped).map(([category, noms]) => (
-              <div key={category} className="mb-8">
-                <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
-                  {category}
-                </h3>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {noms.map((n) => (
-                    <NomineeCard
-                      key={n._id}
-                      nominee={n}
-                      selected={selectedNominee}
-                      onSelect={handleSelectNominee}
-                    />
-                  ))}
-                </div>
+            {/* Section header + progress */}
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Choose Your Nominees
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Select one nominee per category. You can vote in multiple
+                  categories.
+                </p>
               </div>
-            ))}
+              {totalCategories > 0 && (
+                <div className="text-right shrink-0 ml-4">
+                  <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {selectedCount}
+                  </span>
+                  <span className="text-sm text-gray-400 dark:text-gray-500">
+                    /{totalCategories}
+                  </span>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    selected
+                  </p>
+                </div>
+              )}
+            </div>
 
-            <div className="mt-6 flex justify-end">
+            {/* Categories */}
+            <div className="space-y-8 mt-6">
+              {categories.map((category) => {
+                const isVotedInCategory = !!selectedNominees[category];
+                return (
+                  <div key={category}>
+                    {/* Category header with ✅/❌ indicator */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                        {category}
+                      </h3>
+                      {isVotedInCategory ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Selected
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs font-medium">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Not selected
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {grouped[category].map((n) => (
+                        <NomineeCard
+                          key={n._id}
+                          nominee={n}
+                          selected={selectedNominees[category]}
+                          onSelect={handleSelectNominee}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-8 flex items-center justify-between">
+              <p className="text-sm text-gray-400 dark:text-gray-500">
+                {selectedCount === 0
+                  ? "Select at least one nominee to continue"
+                  : `${selectedCount} categor${selectedCount === 1 ? "y" : "ies"} selected — you can add more or continue`}
+              </p>
               <button
                 onClick={handleProceedToEmail}
-                disabled={!selectedNominee}
+                disabled={selectedCount === 0}
                 className="px-8 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Continue
@@ -330,9 +462,26 @@ export default function VotingPage() {
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
                 Enter Your Email
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
                 We'll send a verification OTP to your Gmail.
               </p>
+
+              {/* Summary of selections */}
+              <div className="mb-5 mt-3 space-y-1.5">
+                {Object.entries(selectedNominees).map(([cat, nomineeId]) => {
+                  const nominee = nominees.find((n) => n._id === nomineeId);
+                  return (
+                    <div
+                      key={cat}
+                      className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400"
+                    >
+                      <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center rounded-full bg-blue-500 text-white text-xs font-bold">✓</span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">{cat}:</span>
+                      <span>{nominee?.name || "—"}</span>
+                    </div>
+                  );
+                })}
+              </div>
 
               <EmailInput
                 email={email}
@@ -362,13 +511,15 @@ export default function VotingPage() {
         {/* OTP INPUT */}
         {step === STEPS.OTP && (
           <div className="max-w-md mx-auto">
-          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/60 dark:border-gray-700/50 p-6">
+            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-sm border border-white/60 dark:border-gray-700/50 p-6">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
                 Verify OTP
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                 Enter the 6-digit code sent to{" "}
-                <span className="font-medium text-gray-700 dark:text-gray-300">{email}</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  {email}
+                </span>
               </p>
 
               <OtpInput otp={otp} setOtp={setOtp} error={fieldError} />
@@ -406,7 +557,7 @@ export default function VotingPage() {
       {/* Footer */}
       <footer className="bg-white/60 dark:bg-gray-900/60 backdrop-blur-md border-t border-white/40 dark:border-gray-700/50 mt-auto">
         <div className="max-w-4xl mx-auto px-4 py-4 text-center text-xs text-gray-500 dark:text-gray-400 font-medium">
-          Flutter Chennai Community &middot; Secure OTP-based voting
+          Flutter Chennai Community &middot; Secure OTP-based voting &middot; One vote per category
         </div>
       </footer>
     </AnimatedBackgroundLayout>
