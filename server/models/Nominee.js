@@ -32,6 +32,14 @@ const nomineeSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  medium: {
+    type: String,
+    default: "",
+  },
+  website: {
+    type: String,
+    default: "",
+  },
   createdAt: {
     type: Date,
     default: Date.now,

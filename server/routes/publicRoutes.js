@@ -3,7 +3,7 @@ const router = express.Router();
 
 const { requestOtp, verifyOtp } = require("../controllers/otpController");
 const {
-  castVote,
+  castVotes,
   checkVoteStatus,
   getDeadline,
 } = require("../controllers/voteController");
@@ -18,8 +18,8 @@ router.get("/nominees", getNominees);
 router.post("/otp/request", otpLimiter, requestOtp);
 router.post("/otp/verify", otpVerifyLimiter, verifyOtp);
 
-// Voting
-router.post("/vote", verifyVoterToken, castVote);
+// Voting — single batch request: { votes: [{ nomineeId }] }
+router.post("/votes", verifyVoterToken, castVotes);
 router.post("/vote/status", checkVoteStatus);
 
 // Deadline

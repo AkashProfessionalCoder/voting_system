@@ -13,7 +13,7 @@ const generateOtp = () => {
  * Get OTP expiry date (5 minutes from now)
  */
 const getOtpExpiry = () => {
-  return new Date(Date.now() + 5 * 60 * 1000);
+  return new Date(Date.now() + 10 * 60 * 1000);
 };
 
 module.exports = { generateOtp, getOtpExpiry };

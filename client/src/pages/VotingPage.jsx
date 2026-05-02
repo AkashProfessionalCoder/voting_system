@@ -12,7 +12,7 @@ import {
   getDeadline,
   requestOtp,
   verifyOtp,
-  castVote,
+  castVotes,
   checkVoteStatus,
 } from "../services/api";
 
@@ -37,6 +37,7 @@ export default function VotingPage() {
   // Form state
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [verifiedToken, setVerifiedToken] = useState("");
 
   // Error / loading states
   const [error, setError] = useState("");
@@ -144,6 +145,8 @@ export default function VotingPage() {
 
       await requestOtp(trimmed);
       setCountdown(60);
+      setVerifiedToken(""); // Clear any previous token
+      setError(""); // clear any pre-validation warnings before showing OTP screen
       setStep(STEPS.OTP);
     } catch (err) {
       const msg = err.response?.data?.error || "Failed to send OTP.";
@@ -157,67 +160,39 @@ export default function VotingPage() {
     setFieldError("");
     setError("");
 
-    if (otp.length !== 6) {
+    if (!verifiedToken && otp.length !== 6) {
       setFieldError("Please enter the complete 6-digit OTP.");
       return;
     }
 
     setSubmitting(true);
-    // Track whether we advanced past OTP verification so the catch block
-    // knows which step to revert to (avoids stale closure on `step`).
     let submittingVotes = false;
     try {
-      // Step 1: Verify OTP → get short-lived JWT
-      const verifyRes = await verifyOtp(email.trim().toLowerCase(), otp);
-      const voteToken = verifyRes.data.token;
+      let voteToken = verifiedToken;
+      
+      // Step 1: Verify OTP → get short-lived JWT (skip if already verified)
+      if (!voteToken) {
+        const verifyRes = await verifyOtp(email.trim().toLowerCase(), otp);
+        voteToken = verifyRes.data.token;
+        setVerifiedToken(voteToken);
+      }
 
-      // Step 2: Cast all selected votes using the same token
+      // Step 2: Send ALL selections in one batch request
       submittingVotes = true;
       setStep(STEPS.SUBMITTING);
 
-      const entries = Object.entries(selectedNominees); // [[category, nomineeId], ...]
+      const nomineeIds = Object.values(selectedNominees); // [nomineeId, ...]
+      const categories = Object.keys(selectedNominees);   // [category, ...]
 
-      const voteResults = await Promise.allSettled(
-        entries.map(([, nomineeId]) => castVote(nomineeId, voteToken))
-      );
+      const voteRes = await castVotes(nomineeIds, voteToken);
+      const recordedCategories = voteRes.data.categories || categories;
 
-      // Partition results
-      const succeeded = voteResults
-        .map((r, i) => ({ ...r, category: entries[i][0] }))
-        .filter((r) => r.status === "fulfilled");
-
-      const failed = voteResults
-        .map((r, i) => ({ ...r, category: entries[i][0] }))
-        .filter((r) => r.status === "rejected");
-
-      if (succeeded.length > 0) {
-        setVotedCategories(succeeded.map((r) => r.category));
-
-        if (failed.length > 0) {
-          // Partial success — surface individual failures to the voter
-          const msgs = failed.map(
-            (r) =>
-              r.reason?.response?.data?.error ||
-              `Failed to record vote in "${r.category}"`
-          );
-          setPartialErrors(msgs);
-          setStep(STEPS.PARTIAL);
-        } else {
-          setStep(STEPS.SUCCESS);
-        }
-      } else {
-        // All failed
-        const firstError =
-          failed[0]?.reason?.response?.data?.error ||
-          "All votes failed. Please try again.";
-        setError(firstError);
-        setStep(STEPS.OTP);
-      }
+      setVotedCategories(recordedCategories);
+      setStep(STEPS.SUCCESS);
     } catch (err) {
-      const msg = err.response?.data?.error || "Verification failed.";
+      const msg = err.response?.data?.error || (submittingVotes ? "Vote submission failed. Please try again." : "Verification failed.");
       setError(msg);
-      // Revert to the appropriate step depending on where we failed
-      setStep(submittingVotes ? STEPS.OTP : STEPS.OTP);
+      setStep(STEPS.OTP);
     } finally {
       setSubmitting(false);
     }
@@ -226,11 +201,13 @@ export default function VotingPage() {
   const handleResendOtp = async () => {
     if (countdown > 0) return;
     setError("");
+    setOtp("");
     setSubmitting(true);
     try {
       await requestOtp(email.trim().toLowerCase());
       setCountdown(60);
       setOtp("");
+      setVerifiedToken("");
     } catch (err) {
       const msg = err.response?.data?.error || "Failed to resend OTP.";
       setError(msg);
@@ -242,8 +219,12 @@ export default function VotingPage() {
   const handleBack = () => {
     setError("");
     setFieldError("");
-    if (step === STEPS.OTP) setStep(STEPS.EMAIL);
-    else if (step === STEPS.EMAIL) setStep(STEPS.SELECT);
+    if (step === STEPS.OTP) {
+      setStep(STEPS.EMAIL);
+      setVerifiedToken(""); // clear token if they go back to change email
+    } else if (step === STEPS.EMAIL) {
+      setStep(STEPS.SELECT);
+    }
   };
 
   if (loading) return <Loader text="Loading nominees..." />;
@@ -445,7 +426,7 @@ export default function VotingPage() {
                   <div key={category}>
                     {/* Category header with ✅/❌ indicator */}
                     <div className="flex items-center gap-3 mb-3">
-                      <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                      <h3 className="text-base font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                         {category}
                       </h3>
                       {isVotedInCategory ? (

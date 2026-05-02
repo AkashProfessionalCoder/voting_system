@@ -20,7 +20,7 @@ const getNominees = async (req, res) => {
  */
 const addNominee = async (req, res) => {
   try {
-    const { name, title, image, category, linkedin, twitter, github } = req.body;
+    const { name, title, image, category, linkedin, twitter, github, medium, website } = req.body;
 
     if (!name || !title || !category) {
       return res
@@ -35,7 +35,9 @@ const addNominee = async (req, res) => {
       (image && typeof image !== "string") ||
       (linkedin && typeof linkedin !== "string") ||
       (twitter && typeof twitter !== "string") ||
-      (github && typeof github !== "string")
+      (github && typeof github !== "string") ||
+      (medium && typeof medium !== "string") ||
+      (website && typeof website !== "string")
     ) {
       return res.status(400).json({ error: "Invalid input format." });
     }
@@ -48,6 +50,8 @@ const addNominee = async (req, res) => {
       linkedin: linkedin || "",
       twitter: twitter || "",
       github: github || "",
+      medium: medium || "",
+      website: website || "",
     });
 
     return res.status(201).json(nominee);
@@ -64,7 +68,7 @@ const addNominee = async (req, res) => {
 const updateNominee = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, title, image, category, linkedin, twitter, github } = req.body;
+    const { name, title, image, category, linkedin, twitter, github, medium, website } = req.body;
 
     if (
       (name && typeof name !== "string") ||
@@ -73,7 +77,9 @@ const updateNominee = async (req, res) => {
       (category && typeof category !== "string") ||
       (linkedin !== undefined && typeof linkedin !== "string") ||
       (twitter !== undefined && typeof twitter !== "string") ||
-      (github !== undefined && typeof github !== "string")
+      (github !== undefined && typeof github !== "string") ||
+      (medium !== undefined && typeof medium !== "string") ||
+      (website !== undefined && typeof website !== "string")
     ) {
       return res.status(400).json({ error: "Invalid input format." });
     }
@@ -88,6 +94,8 @@ const updateNominee = async (req, res) => {
         ...(linkedin !== undefined && { linkedin }),
         ...(twitter !== undefined && { twitter }),
         ...(github !== undefined && { github }),
+        ...(medium !== undefined && { medium }),
+        ...(website !== undefined && { website }),
       },
       { returnDocument: 'after', runValidators: true },
     );
