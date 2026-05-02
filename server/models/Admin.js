@@ -12,6 +12,11 @@ const adminSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  // Tracks when password was last changed — used to invalidate old JWT tokens.
+  passwordChangedAt: {
+    type: Date,
+    default: null,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
