@@ -12,3 +12,4 @@ client/dist/
 .Trashes
 ehthumbs.db
 Thumbs.db
+.nominee-data.json

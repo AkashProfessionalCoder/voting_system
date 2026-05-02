@@ -121,8 +121,9 @@ const verifyOtp = async (req, res) => {
     await User.findOneAndUpdate({ email: canonicalEmail }, { verified: true });
 
     // Generate short-lived JWT (15 minutes to cast vote)
+    // jti = OTP record id — used by castVotes to mark the session as consumed
     const token = jwt.sign(
-      { email: canonicalEmail, role: "voter" },
+      { email: canonicalEmail, role: "voter", jti: otpRecord._id.toString() },
       process.env.JWT_SECRET,
       { expiresIn: "15m" },
     );
