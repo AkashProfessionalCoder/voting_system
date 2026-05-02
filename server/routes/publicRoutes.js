@@ -20,7 +20,7 @@ router.post("/otp/verify", otpVerifyLimiter, verifyOtp);
 
 // Voting
 router.post("/vote", verifyVoterToken, castVote);
-router.get("/vote/status", checkVoteStatus);
+router.post("/vote/status", checkVoteStatus);
 
 // Deadline
 router.get("/deadline", getDeadline);

@@ -50,7 +50,7 @@ const login = async (req, res) => {
 
 /**
  * GET /api/admin/results
- * Get vote counts per nominee
+ * Get vote counts per nominee, grouped by category.
  */
 const getResults = async (req, res) => {
   try {
@@ -59,6 +59,8 @@ const getResults = async (req, res) => {
         $group: {
           _id: "$nomineeId",
           voteCount: { $sum: 1 },
+          // category is denormalized on each Vote document
+          category: { $first: "$category" },
         },
       },
       {
@@ -76,17 +78,24 @@ const getResults = async (req, res) => {
           nomineeId: "$_id",
           name: "$nominee.name",
           title: "$nominee.title",
-          category: "$nominee.category",
+          category: "$category",
           image: "$nominee.image",
           voteCount: 1,
         },
       },
-      { $sort: { voteCount: -1 } },
+      // Sort by category name then descending vote count
+      { $sort: { category: 1, voteCount: -1 } },
     ]);
+
+    // Per-category totals (useful for computing % within a category)
+    const categoryTotals = results.reduce((acc, r) => {
+      acc[r.category] = (acc[r.category] || 0) + r.voteCount;
+      return acc;
+    }, {});
 
     const totalVotes = await Vote.countDocuments();
 
-    return res.status(200).json({ results, totalVotes });
+    return res.status(200).json({ results, totalVotes, categoryTotals });
   } catch (error) {
     console.error("Get results error:", error);
     return res.status(500).json({ error: "Failed to fetch results." });
@@ -179,4 +188,18 @@ const setDeadline = async (req, res) => {
   }
 };
 
-module.exports = { login, getResults, getVoters, exportVotes, setDeadline };
+/**
+ * DELETE /api/admin/voters/truncate
+ * Truncate all votes and voters data (Danger Zone)
+ */
+const truncateVotes = async (req, res) => {
+  try {
+    await Vote.deleteMany({});
+    return res.status(200).json({ message: "All votes have been deleted successfully." });
+  } catch (error) {
+    console.error("Truncate votes error:", error);
+    return res.status(500).json({ error: "Failed to truncate votes." });
+  }
+};
+
+module.exports = { login, getResults, getVoters, exportVotes, setDeadline, truncateVotes };

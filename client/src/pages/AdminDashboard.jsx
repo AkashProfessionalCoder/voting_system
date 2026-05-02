@@ -13,6 +13,7 @@ import {
   deleteNominee,
   exportVotes,
   setDeadline as setDeadlineApi,
+  truncateVotes,
 } from "../services/api";
 
 export default function AdminDashboard() {
@@ -28,6 +29,7 @@ export default function AdminDashboard() {
   // Dashboard data
   const [results, setResults] = useState([]);
   const [totalVotes, setTotalVotes] = useState(0);
+  const [categoryTotals, setCategoryTotals] = useState({});
   const [voters, setVoters] = useState([]);
   const [nominees, setNominees] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -52,6 +54,11 @@ export default function AdminDashboard() {
   const [currentDeadline, setCurrentDeadline] = useState(null);
   const [deadlineMsg, setDeadlineMsg] = useState("");
 
+  // Truncate votes dialog
+  const [showTruncateDialog, setShowTruncateDialog] = useState(false);
+  const [truncateConfirmText, setTruncateConfirmText] = useState("");
+  const [truncating, setTruncating] = useState(false);
+
   useEffect(() => {
     if (isLoggedIn && token) {
       fetchDashboardData();
@@ -70,6 +77,7 @@ export default function AdminDashboard() {
       ]);
       setResults(resRes.data.results);
       setTotalVotes(resRes.data.totalVotes);
+      setCategoryTotals(resRes.data.categoryTotals || {});
       setVoters(votersRes.data);
       setNominees(nomRes.data);
       if (dlRes.data.deadline) {
@@ -182,6 +190,22 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleTruncate = async () => {
+    if (truncateConfirmText !== "DELETE") return;
+    setTruncating(true);
+    try {
+      await truncateVotes(token);
+      setShowTruncateDialog(false);
+      setTruncateConfirmText("");
+      await fetchDashboardData();
+    } catch (err) {
+      console.error(err);
+      setError("Failed to truncate votes.");
+    } finally {
+      setTruncating(false);
+    }
+  };
+
   const handleSetDeadline = async () => {
     if (!deadlineInput) return;
 
@@ -268,9 +292,13 @@ export default function AdminDashboard() {
   }
 
   // Dashboard
-  const maxVotes = results.length
-    ? Math.max(...results.map((r) => r.voteCount))
-    : 1;
+  // Group results by category (backend already sorts by {category:1, voteCount:-1})
+  const resultsByCategory = results.reduce((acc, r) => {
+    if (!acc[r.category]) acc[r.category] = [];
+    acc[r.category].push(r);
+    return acc;
+  }, {});
+  const resultCategories = Object.keys(resultsByCategory).sort();
 
   return (
     <AnimatedBackgroundLayout>
@@ -339,13 +367,18 @@ export default function AdminDashboard() {
           <Loader text="Loading dashboard..." />
         ) : (
           <>
-            {/* RESULTS TAB */}
+            {/* RESULTS TAB — grouped by category */}
             {activeTab === "results" && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    Vote Results
-                  </h2>
+              <div className="space-y-8">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      Vote Results
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {totalVotes} total vote{totalVotes !== 1 ? "s" : ""} across {resultCategories.length} categor{resultCategories.length !== 1 ? "ies" : "y"}
+                    </p>
+                  </div>
                   <button
                     onClick={handleExport}
                     className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -353,45 +386,69 @@ export default function AdminDashboard() {
                     Export CSV
                   </button>
                 </div>
+
                 {results.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">
-                    No votes yet.
-                  </p>
+                  <p className="text-gray-500 text-center py-8">No votes yet.</p>
                 ) : (
-                  results.map((r) => (
-                    <div
-                      key={r.nomineeId}
-                      className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-white/60 dark:border-gray-700/50 shadow-sm p-4"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                            {r.name}
+                  resultCategories.map((category) => {
+                    const catResults = resultsByCategory[category];
+                    const catTotal = categoryTotals[category] ?? 0;
+                    const maxInCat = catResults.length > 0
+                      ? Math.max(...catResults.map((r) => r.voteCount))
+                      : 0;
+                    return (
+                      <div key={category}>
+                        {/* Category header */}
+                        <div className="flex items-center gap-3 mb-3">
+                          <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                            {category}
                           </h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {r.title} &middot; {r.category}
-                          </p>
+                          <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-medium">
+                            {catTotal} vote{catTotal !== 1 ? "s" : ""}
+                          </span>
                         </div>
-                        <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                          {r.voteCount}
-                        </span>
+
+                        <div className="space-y-3">
+                          {catResults.map((r, idx) => (
+                            <div
+                              key={r.nomineeId}
+                              className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-white/60 dark:border-gray-700/50 shadow-sm p-4"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-3">
+                                  {idx === 0 && (
+                                    <span className="text-base" title="Category leader">🏆</span>
+                                  )}
+                                  <div>
+                                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                                      {r.name}
+                                    </h4>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                      {r.title}
+                                    </p>
+                                  </div>
+                                </div>
+                                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                  {r.voteCount}
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
+                                <div
+                                  className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                                  style={{ width: maxInCat > 0 ? `${(r.voteCount / maxInCat) * 100}%` : "0%" }}
+                                />
+                              </div>
+                              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                {catTotal > 0
+                                  ? ((r.voteCount / catTotal) * 100).toFixed(1)
+                                  : 0}% of category votes
+                              </p>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5">
-                        <div
-                          className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
-                          style={{
-                            width: `${(r.voteCount / maxVotes) * 100}%`,
-                          }}
-                        />
-                      </div>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                        {totalVotes > 0
-                          ? ((r.voteCount / totalVotes) * 100).toFixed(1)
-                          : 0}
-                        % of total
-                      </p>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             )}
@@ -399,9 +456,17 @@ export default function AdminDashboard() {
             {/* VOTERS TAB */}
             {activeTab === "voters" && (
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                  All Voters ({voters.length})
-                </h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    All Voters ({voters.length})
+                  </h2>
+                  <button
+                    onClick={() => setShowTruncateDialog(true)}
+                    className="px-3 py-1.5 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-800/30 transition-colors"
+                  >
+                    Truncate Votes
+                  </button>
+                </div>
                 {voters.length === 0 ? (
                   <p className="text-gray-500 text-center py-8">
                     No voters yet.
@@ -735,6 +800,51 @@ export default function AdminDashboard() {
           </>
         )}
       </main>
+
+      {/* Truncate Confirmation Dialog */}
+      {showTruncateDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-red-200 dark:border-red-900/50">
+            <div className="flex items-center gap-3 mb-4 text-red-600 dark:text-red-400">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <h3 className="text-xl font-bold">Danger Zone</h3>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+              This will permanently delete all votes and clear the leaderboard. This action cannot be undone.
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2 font-medium">
+              Type <strong className="text-red-600 dark:text-red-400 select-all">DELETE</strong> to confirm:
+            </p>
+            <input
+              type="text"
+              value={truncateConfirmText}
+              onChange={(e) => setTruncateConfirmText(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg bg-gray-50 dark:bg-gray-900 dark:border-gray-700 dark:text-white mb-6 focus:ring-2 focus:ring-red-500 outline-none"
+              placeholder="DELETE"
+            />
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowTruncateDialog(false);
+                  setTruncateConfirmText("");
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleTruncate}
+                disabled={truncateConfirmText !== "DELETE" || truncating}
+                className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+              >
+                {truncating ? "Deleting..." : "Delete All"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AnimatedBackgroundLayout>
   );
 }

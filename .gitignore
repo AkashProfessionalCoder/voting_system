@@ -3,3 +3,12 @@ node_modules/
 client/node_modules/
 client/build/
 client/dist/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
