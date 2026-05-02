@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Admin = require("../models/Admin");
 const Vote = require("../models/Vote");
+const { getActiveDeadline, setActiveDeadline } = require("../utils/deadlineUtils");
 
 /**
  * POST /api/admin/login
@@ -159,7 +160,7 @@ const exportVotes = async (req, res) => {
 
 /**
  * PUT /api/admin/deadline
- * Set/update voting deadline
+ * Set/update voting deadline — persisted in MongoDB so it survives serverless restarts.
  */
 const setDeadline = async (req, res) => {
   try {
@@ -175,8 +176,8 @@ const setDeadline = async (req, res) => {
       return res.status(400).json({ error: "Invalid date format." });
     }
 
-    // Update environment variable at runtime
-    process.env.VOTING_DEADLINE = date.toISOString();
+    // Persist in DB — survives serverless cold starts, unlike process.env
+    await setActiveDeadline(date);
 
     return res.status(200).json({
       message: "Deadline updated.",

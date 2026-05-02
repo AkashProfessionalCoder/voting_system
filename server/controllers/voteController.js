@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Vote = require("../models/Vote");
 const Nominee = require("../models/Nominee");
 const { canonicalizeEmail } = require("../utils/emailUtils");
+const { getActiveDeadline } = require("../utils/deadlineUtils");
 
 /**
  * POST /api/vote
@@ -109,11 +110,17 @@ const checkVoteStatus = async (req, res) => {
 
 /**
  * GET /api/deadline
- * Return the voting deadline
+ * Return the voting deadline — reads from DB first, falls back to env var.
  */
 const getDeadline = async (req, res) => {
-  const deadline = process.env.VOTING_DEADLINE || null;
-  return res.status(200).json({ deadline });
+  try {
+    const deadline = await getActiveDeadline();
+    return res.status(200).json({ deadline: deadline ? deadline.toISOString() : null });
+  } catch (error) {
+    // Fallback to env if DB fails
+    const deadline = process.env.VOTING_DEADLINE || null;
+    return res.status(200).json({ deadline });
+  }
 };
 
 module.exports = { castVote, checkVoteStatus, getDeadline };
