@@ -15,6 +15,7 @@ import {
   setDeadline as setDeadlineApi,
   truncateVotes,
 } from "../services/api";
+import logo from "../assets/logo.png";
 
 export default function AdminDashboard() {
   const [token, setToken] = useState(localStorage.getItem("admin_token") || "");
@@ -245,9 +246,7 @@ export default function AdminDashboard() {
         <div className="min-h-screen flex items-center justify-center p-4">
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-xl p-8 w-full max-w-sm border border-white/40 dark:border-gray-700/50">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold">A</span>
-              </div>
+              <img src={logo} alt="Logo" className="w-10 h-10 object-contain" />
               <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 Admin Login
               </h1>
@@ -312,9 +311,7 @@ export default function AdminDashboard() {
       <header className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border-b border-white/40 dark:border-gray-700/50 shadow-sm sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">FC</span>
-            </div>
+            <img src={logo} alt="Logo" className="w-9 h-9 object-contain" />
             <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
               Admin Dashboard
             </h1>

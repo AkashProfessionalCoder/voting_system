@@ -15,6 +15,7 @@ import {
   castVotes,
   checkVoteStatus,
 } from "../services/api";
+import logo from "../assets/logo.png";
 
 const STEPS = {
   SELECT: "select",
@@ -268,9 +269,7 @@ export default function VotingPage() {
         <div className="max-w-4xl mx-auto px-4 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">F</span>
-              </div>
+              <img src={logo} alt="Logo" className="w-10 h-10 object-contain" />
               <div>
                 <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                   Flutter Chennai
