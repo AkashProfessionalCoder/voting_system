@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import NomineeCard from "../components/NomineeCard";
 import EmailInput from "../components/EmailInput";
 import OtpInput from "../components/OtpInput";
@@ -15,6 +16,8 @@ import {
   castVotes,
   checkVoteStatus,
 } from "../services/api";
+import logo from "../assets/logo.png";
+import CountdownTimer from "../components/CountdownTimer";
 
 const STEPS = {
   SELECT: "select",
@@ -267,10 +270,8 @@ export default function VotingPage() {
       <header className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border-b border-white/40 dark:border-gray-700/50 shadow-sm sticky top-0 z-20">
         <div className="max-w-4xl mx-auto px-4 py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">F</span>
-              </div>
+            <Link to="/" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
+              <img src={logo} alt="Logo" className="w-14 h-14 object-contain" />
               <div>
                 <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                   Flutter Chennai
@@ -279,13 +280,19 @@ export default function VotingPage() {
                   Annual Community Vote 2026
                 </p>
               </div>
-            </div>
+            </Link>
             <ThemeToggle />
           </div>
           {deadline && (
-            <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
-              Voting ends: {new Date(deadline).toLocaleString()}
-            </p>
+            <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+              <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                Time Remaining
+              </span>
+              <CountdownTimer deadline={deadline} />
+              <span className="text-[10px] text-gray-400 dark:text-gray-500 italic hidden sm:block">
+                (Ends: {new Date(deadline).toLocaleString()})
+              </span>
+            </div>
           )}
         </div>
       </header>
@@ -389,6 +396,22 @@ export default function VotingPage() {
         {/* SELECT NOMINEES */}
         {step === STEPS.SELECT && (
           <div>
+            {/* Hero Section */}
+            <div className="text-center mb-16 relative">
+              <div className="absolute inset-0 bg-blue-500/5 dark:bg-blue-500/10 blur-3xl rounded-full -z-10" />
+              <img 
+                src={logo} 
+                alt="Dash Mascot" 
+                className="w-48 h-48 mx-auto mb-6 drop-shadow-2xl animate-float" 
+              />
+              <h2 className="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-gray-100 mb-4 tracking-tight">
+                Your Vote, <span className="text-blue-600 dark:text-blue-400">Our Future.</span>
+              </h2>
+              <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
+                Celebrate the Flutter Chennai community. Recognize the stars who make our ecosystem amazing by casting your official vote today.
+              </p>
+            </div>
+
             {/* How Voting Works — shown at top of select step */}
             <HowItWorks />
 
