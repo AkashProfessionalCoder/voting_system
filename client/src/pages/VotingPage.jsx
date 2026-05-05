@@ -16,6 +16,7 @@ import {
   checkVoteStatus,
 } from "../services/api";
 import logo from "../assets/logo.png";
+import CountdownTimer from "../components/CountdownTimer";
 
 const STEPS = {
   SELECT: "select",
@@ -282,9 +283,15 @@ export default function VotingPage() {
             <ThemeToggle />
           </div>
           {deadline && (
-            <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
-              Voting ends: {new Date(deadline).toLocaleString()}
-            </p>
+            <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+              <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                Time Remaining
+              </span>
+              <CountdownTimer deadline={deadline} />
+              <span className="text-[10px] text-gray-400 dark:text-gray-500 italic hidden sm:block">
+                (Ends: {new Date(deadline).toLocaleString()})
+              </span>
+            </div>
           )}
         </div>
       </header>

@@ -16,6 +16,7 @@ import {
   truncateVotes,
 } from "../services/api";
 import logo from "../assets/logo.png";
+import CountdownTimer from "../components/CountdownTimer";
 
 export default function AdminDashboard() {
   const [token, setToken] = useState(localStorage.getItem("admin_token") || "");
@@ -316,20 +317,30 @@ export default function AdminDashboard() {
               Admin Dashboard
             </h1>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-              Total Votes:{" "}
-              <strong className="text-gray-900 dark:text-gray-100">
-                {totalVotes}
-              </strong>
-            </span>
-            <ThemeToggle />
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
-            >
-              Logout
-            </button>
+          <div className="flex items-center gap-4">
+            {currentDeadline && (
+              <div className="hidden md:flex items-center gap-2">
+                <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                  Ends In:
+                </span>
+                <CountdownTimer deadline={currentDeadline} className="scale-90 origin-right" />
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
+                Total Votes:{" "}
+                <strong className="text-gray-900 dark:text-gray-100">
+                  {totalVotes}
+                </strong>
+              </span>
+              <ThemeToggle />
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -812,12 +823,15 @@ export default function AdminDashboard() {
                     Voting Deadline
                   </h3>
                   {currentDeadline && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                      Current deadline:{" "}
-                      <span className="font-medium text-gray-700 dark:text-gray-300">
-                        {new Date(currentDeadline).toLocaleString()}
-                      </span>
-                    </p>
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                        Current deadline:{" "}
+                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                          {new Date(currentDeadline).toLocaleString()}
+                        </span>
+                      </p>
+                      <CountdownTimer deadline={currentDeadline} />
+                    </div>
                   )}
                   <div className="flex gap-3">
                     <input
