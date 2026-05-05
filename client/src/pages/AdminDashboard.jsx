@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import Loader from "../components/Loader";
 import AnimatedBackgroundLayout from "../components/AnimatedBackgroundLayout";
 import ThemeToggle from "../components/ThemeToggle";
@@ -246,8 +247,8 @@ export default function AdminDashboard() {
       <AnimatedBackgroundLayout>
         <div className="min-h-screen flex items-center justify-center p-4">
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-xl p-8 w-full max-w-sm border border-white/40 dark:border-gray-700/50">
-            <div className="flex items-center gap-3 mb-6">
-              <img src={logo} alt="Logo" className="w-10 h-10 object-contain" />
+            <div className="flex items-center gap-4 mb-6">
+              <img src={logo} alt="Logo" className="w-14 h-14 object-contain" />
               <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 Admin Login
               </h1>
@@ -311,12 +312,12 @@ export default function AdminDashboard() {
       {/* Header */}
       <header className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border-b border-white/40 dark:border-gray-700/50 shadow-sm sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="Logo" className="w-9 h-9 object-contain" />
+          <Link to="/" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
+            <img src={logo} alt="Logo" className="w-12 h-12 object-contain" />
             <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
               Admin Dashboard
             </h1>
-          </div>
+          </Link>
           <div className="flex items-center gap-4">
             {currentDeadline && (
               <div className="hidden md:flex items-center gap-2">
