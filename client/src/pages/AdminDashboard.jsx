@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import Loader from "../components/Loader";
 import AnimatedBackgroundLayout from "../components/AnimatedBackgroundLayout";
 import ThemeToggle from "../components/ThemeToggle";
@@ -15,6 +16,8 @@ import {
   setDeadline as setDeadlineApi,
   truncateVotes,
 } from "../services/api";
+import logo from "../assets/logo.png";
+import CountdownTimer from "../components/CountdownTimer";
 
 export default function AdminDashboard() {
   const [token, setToken] = useState(localStorage.getItem("admin_token") || "");
@@ -244,10 +247,8 @@ export default function AdminDashboard() {
       <AnimatedBackgroundLayout>
         <div className="min-h-screen flex items-center justify-center p-4">
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-xl p-8 w-full max-w-sm border border-white/40 dark:border-gray-700/50">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold">A</span>
-              </div>
+            <div className="flex items-center gap-4 mb-6">
+              <img src={logo} alt="Logo" className="w-14 h-14 object-contain" />
               <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 Admin Login
               </h1>
@@ -311,28 +312,36 @@ export default function AdminDashboard() {
       {/* Header */}
       <header className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border-b border-white/40 dark:border-gray-700/50 shadow-sm sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">FC</span>
-            </div>
+          <Link to="/" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
+            <img src={logo} alt="Logo" className="w-12 h-12 object-contain" />
             <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
               Admin Dashboard
             </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-              Total Votes:{" "}
-              <strong className="text-gray-900 dark:text-gray-100">
-                {totalVotes}
-              </strong>
-            </span>
-            <ThemeToggle />
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
-            >
-              Logout
-            </button>
+          </Link>
+          <div className="flex items-center gap-4">
+            {currentDeadline && (
+              <div className="hidden md:flex items-center gap-2">
+                <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                  Ends In:
+                </span>
+                <CountdownTimer deadline={currentDeadline} className="scale-90 origin-right" />
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
+                Total Votes:{" "}
+                <strong className="text-gray-900 dark:text-gray-100">
+                  {totalVotes}
+                </strong>
+              </span>
+              <ThemeToggle />
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -815,12 +824,15 @@ export default function AdminDashboard() {
                     Voting Deadline
                   </h3>
                   {currentDeadline && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                      Current deadline:{" "}
-                      <span className="font-medium text-gray-700 dark:text-gray-300">
-                        {new Date(currentDeadline).toLocaleString()}
-                      </span>
-                    </p>
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                        Current deadline:{" "}
+                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                          {new Date(currentDeadline).toLocaleString()}
+                        </span>
+                      </p>
+                      <CountdownTimer deadline={currentDeadline} />
+                    </div>
                   )}
                   <div className="flex gap-3">
                     <input
