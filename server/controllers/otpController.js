@@ -7,11 +7,9 @@ const { canonicalizeEmail } = require("../utils/emailUtils");
 const { getActiveDeadline } = require("../utils/deadlineUtils");
 const { RATE_LIMITS } = require("../config/constants");
 
-const GMAIL_REGEX = /^[a-zA-Z0-9.\+]+@gmail\.com$/;
-
 /**
  * POST /api/otp/request
- * Request an OTP for a Gmail address
+ * Request an OTP for an email address
  */
 const requestOtp = async (req, res) => {
   try {
@@ -23,13 +21,6 @@ const requestOtp = async (req, res) => {
 
     const originalEmail = email.trim().toLowerCase();
     const canonicalEmail = canonicalizeEmail(originalEmail);
-
-    // Gmail-only validation
-    if (!GMAIL_REGEX.test(originalEmail)) {
-      return res
-        .status(400)
-        .json({ error: "Only @gmail.com addresses are allowed." });
-    }
 
     // Check voting deadline before sending OTP (reads DB first, falls back to env)
     const deadline = await getActiveDeadline();
@@ -65,7 +56,7 @@ const requestOtp = async (req, res) => {
     await User.findOneAndUpdate(
       { email: canonicalEmail },
       { email: canonicalEmail },
-      { upsert: true, returnDocument: 'after' },
+      { upsert: true, returnDocument: "after" },
     );
 
     // Send OTP email
@@ -88,18 +79,17 @@ const verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    if (!email || !otp || typeof email !== "string" || typeof otp !== "string") {
+    if (
+      !email ||
+      !otp ||
+      typeof email !== "string" ||
+      typeof otp !== "string"
+    ) {
       return res.status(400).json({ error: "Email and OTP are required." });
     }
 
     const originalEmail = email.trim().toLowerCase();
     const canonicalEmail = canonicalizeEmail(originalEmail);
-
-    if (!GMAIL_REGEX.test(originalEmail)) {
-      return res
-        .status(400)
-        .json({ error: "Only @gmail.com addresses are allowed." });
-    }
 
     // Atomic find-and-mark to prevent race conditions
     const otpRecord = await OtpRequest.findOneAndUpdate(
@@ -110,7 +100,7 @@ const verifyOtp = async (req, res) => {
         expiresAt: { $gt: new Date() },
       },
       { $set: { verified: true } },
-      { sort: { createdAt: -1 }, returnDocument: 'after' },
+      { sort: { createdAt: -1 }, returnDocument: "after" },
     );
 
     if (!otpRecord) {
