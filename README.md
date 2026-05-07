@@ -18,7 +18,7 @@ Built as a monolithic Node.js + React application with MongoDB.
 
 ## ✨ Features
 
-- **🔐 OTP-based email verification** — Gmail-only, 6-digit codes, 5-minute expiry.
+- **🔐 OTP-based email verification** — SMTP-based, 6-digit codes, 5-minute expiry.
 - **🛡️ One vote per email** — Enforced at the database level (MongoDB unique index).
 - **⏳ Voting deadline** — Configurable and strictly enforced server-side.
 - **📊 Admin dashboard** — Real-time results, voter list, nominee CRUD operations, and CSV export.
@@ -30,12 +30,12 @@ Built as a monolithic Node.js + React application with MongoDB.
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-| :--- | :--- |
-| **Backend** | Node.js, Express 5 |
-| **Frontend** | React 19, Vite, Tailwind CSS v4 |
-| **Database** | MongoDB, Mongoose |
-| **Email** | Nodemailer (Gmail SMTP) |
+| Layer               | Technology                                |
+| :------------------ | :---------------------------------------- |
+| **Backend**         | Node.js, Express 5                        |
+| **Frontend**        | React 19, Vite, Tailwind CSS v4           |
+| **Database**        | MongoDB, Mongoose                         |
+| **Email**           | Nodemailer (SMTP provider)                |
 | **Auth & Security** | JWT, bcryptjs, Helmet, Express Rate Limit |
 
 ---
@@ -75,7 +75,7 @@ annual_voting_system/
 
 - Node.js 18+
 - MongoDB (local or Atlas)
-- Gmail account with [App Password](https://myaccount.google.com/apppasswords) enabled
+- SMTP-enabled mailbox (for example: `noreply@nammaflutter.com`)
 
 ### 1. Clone & Install
 
@@ -98,15 +98,19 @@ cp .env.example .env
 
 Edit the `.env` file with your values:
 
-| Variable | Description |
-| :--- | :--- |
-| `PORT` | Server port (default: `5000`) |
-| `MONGODB_URI` | MongoDB connection string |
-| `JWT_SECRET` | Secret key for JWT signing |
-| `EMAIL_USER` | Gmail address (sender) |
-| `EMAIL_PASS` | Gmail App Password (not regular password) |
-| `CLIENT_URL` | Frontend URL for CORS (default: `http://localhost:3000`) |
-| `VOTING_DEADLINE` | ISO 8601 timestamp |
+| Variable          | Description                                              |
+| :---------------- | :------------------------------------------------------- |
+| `PORT`            | Server port (default: `5000`)                            |
+| `MONGODB_URI`     | MongoDB connection string                                |
+| `JWT_SECRET`      | Secret key for JWT signing                               |
+| `SMTP_HOST`       | SMTP host from your provider                             |
+| `SMTP_PORT`       | SMTP port (usually `587` or `465`)                       |
+| `SMTP_SECURE`     | Use `true` for `465`, `false` for `587`                  |
+| `SMTP_USER`       | SMTP username (usually sender email)                     |
+| `SMTP_PASS`       | SMTP password or API key                                 |
+| `EMAIL_FROM`      | Sender display name and email                            |
+| `CLIENT_URL`      | Frontend URL for CORS (default: `http://localhost:3000`) |
+| `VOTING_DEADLINE` | ISO 8601 timestamp                                       |
 
 ### 3. Seed Database
 
@@ -146,26 +150,28 @@ npm start
 ## 📡 API Endpoints
 
 ### Public
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/api/nominees` | List all nominees |
-| `POST` | `/api/otp/request` | Request an OTP to your email |
-| `POST` | `/api/otp/verify` | Verify OTP and receive JWT |
-| `POST` | `/api/vote` | Cast a vote (Requires Voter JWT) |
-| `GET` | `/api/vote/status` | Check if current email has already voted |
-| `GET` | `/api/deadline` | Get the configured voting deadline |
+
+| Method | Endpoint           | Description                              |
+| :----- | :----------------- | :--------------------------------------- |
+| `GET`  | `/api/nominees`    | List all nominees                        |
+| `POST` | `/api/otp/request` | Request an OTP to your email             |
+| `POST` | `/api/otp/verify`  | Verify OTP and receive JWT               |
+| `POST` | `/api/vote`        | Cast a vote (Requires Voter JWT)         |
+| `GET`  | `/api/vote/status` | Check if current email has already voted |
+| `GET`  | `/api/deadline`    | Get the configured voting deadline       |
 
 ### Admin (Requires Admin JWT)
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/api/admin/login` | Admin authentication |
-| `GET` | `/api/admin/results` | Fetch real-time vote counts |
-| `GET` | `/api/admin/voters` | Fetch paginated list of voters |
-| `GET` | `/api/admin/export` | Download voting results as CSV |
-| `POST` | `/api/admin/nominees` | Create a new nominee |
-| `PUT` | `/api/admin/nominees/:id`| Update an existing nominee |
-| `DELETE`| `/api/admin/nominees/:id`| Delete a nominee |
-| `PUT` | `/api/admin/deadline` | Update the global voting deadline |
+
+| Method   | Endpoint                  | Description                       |
+| :------- | :------------------------ | :-------------------------------- |
+| `POST`   | `/api/admin/login`        | Admin authentication              |
+| `GET`    | `/api/admin/results`      | Fetch real-time vote counts       |
+| `GET`    | `/api/admin/voters`       | Fetch paginated list of voters    |
+| `GET`    | `/api/admin/export`       | Download voting results as CSV    |
+| `POST`   | `/api/admin/nominees`     | Create a new nominee              |
+| `PUT`    | `/api/admin/nominees/:id` | Update an existing nominee        |
+| `DELETE` | `/api/admin/nominees/:id` | Delete a nominee                  |
+| `PUT`    | `/api/admin/deadline`     | Update the global voting deadline |
 
 ---
 
@@ -183,10 +189,10 @@ npm start
 
 ## 📚 Documentation
 
-| Document | Purpose |
-| :--- | :--- |
-| [Architecture](docs/Architecture.md) | System design, data flow, and layers |
-| [Contribution Guide](docs/Contribution.md) | Branching strategy and PR workflow |
+| Document                                                 | Purpose                                      |
+| :------------------------------------------------------- | :------------------------------------------- |
+| [Architecture](docs/Architecture.md)                     | System design, data flow, and layers         |
+| [Contribution Guide](docs/Contribution.md)               | Branching strategy and PR workflow           |
 | [Documentation Standards](docs/Documentation_pattern.md) | Guidelines for code comments and structuring |
 
 ---
