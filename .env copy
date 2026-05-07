@@ -1,0 +1,20 @@
+# Server
+PORT=5050
+NODE_ENV=development
+
+# MongoDB
+MONGODB_URI=mongodb+srv://akashprocoder_db_user:bcXSKYMFXm7aiagV@clustervotingsystem.hguqspd.mongodb.net/voting_system?appName=ClusterVotingSystem
+# MONGODB_URI=mongodb://127.0.0.1:27017/voting_system
+# JWT
+JWT_SECRET=namma_dash
+
+# Email (Gmail App Password)
+EMAIL_USER=akashprocoder@gmail.com
+EMAIL_PASS=cutf bjbq muxv uaqg
+
+
+# Client URL (for CORS in development)
+CLIENT_URL=http://localhost:3000
+
+# Voting Deadline (ISO 8601 format)
+VOTING_DEADLINE=2026-05-07T23:59:59.000Z
